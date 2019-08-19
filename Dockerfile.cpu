@@ -1,0 +1,41 @@
+FROM ubuntu:18.04
+
+#get deps
+RUN apt-get update && \
+DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+python3-dev python3-pip git g++ wget make libprotobuf-dev protobuf-compiler libopencv-dev \
+libgoogle-glog-dev libboost-all-dev libcaffe-cuda-dev libhdf5-dev libatlas-base-dev
+
+#for python api
+RUN pip3 install numpy opencv-python
+
+#replace cmake as old version has CUDA variable bugs
+RUN wget https://github.com/Kitware/CMake/releases/download/v3.14.2/cmake-3.14.2-Linux-x86_64.tar.gz && \
+tar xzf cmake-3.14.2-Linux-x86_64.tar.gz -C /opt && \
+rm cmake-3.14.2-Linux-x86_64.tar.gz
+ENV PATH="/opt/cmake-3.14.2-Linux-x86_64/bin:${PATH}"
+
+#get openpose
+ENV OPENPOSE_ROOT=/opt/openpose
+WORKDIR $OPENPOSE_ROOT
+RUN git clone https://github.com/CMU-Perceptual-Computing-Lab/openpose.git $OPENPOSE_ROOT
+
+#build it
+WORKDIR $OPENPOSE_ROOT/build
+RUN cmake -DBUILD_PYTHON=ON -DGPU_MODE=CPU_ONLY -DUSE_MKL=OFF ..
+RUN make -j8
+
+########### LET HER RIP ############
+ADD . /opt/anchormen
+WORKDIR /opt/anchormen/
+#RUN pip3 install -r requirements.txt
+
+ENV LD_LIBRARY_PATH /usr/lib/x86_64-linux-gnu/
+
+# This is important because the demo is Qt4 based and otherwise you'll get a weird X server error
+# https://stackoverflow.com/a/35040140/543720
+# https://stackoverflow.com/a/55989420/543720
+ENV QT_GRAPHICSSYSTEM "native"
+ENV QT_X11_NO_MITSHM 1
+
+#ENTRYPOINT ["python3", "demo.py"]

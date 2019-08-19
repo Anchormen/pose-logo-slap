@@ -1,3 +1,4 @@
-colorlover
-pandas
-dlib
+pymunk
+pygame
+numpy
+opencv-python
