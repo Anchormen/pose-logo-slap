@@ -38,11 +38,13 @@ ENV BOOST_ROOT /usr/lib/x86_64-linux-gnu/
 ENV QT_GRAPHICSSYSTEM "native"
 ENV QT_X11_NO_MITSHM 1
 
-########### LET HER RIP ############
-VOLUME /opt/anchormen
+# our own stuff
+#ADD . /opt/anchormen
 WORKDIR /opt/anchormen/
+RUN pip3 install setuptools wheel
 #RUN pip3 install -r requirements.txt
 
 
 
+########### LET HER RIP ############
 #ENTRYPOINT ["python3", "demo.py"]
