@@ -24,18 +24,25 @@ RUN git clone https://github.com/CMU-Perceptual-Computing-Lab/openpose.git $OPEN
 WORKDIR $OPENPOSE_ROOT/build
 RUN cmake -DBUILD_PYTHON=ON -DGPU_MODE=CPU_ONLY -DUSE_MKL=OFF ..
 RUN make -j8
+RUN cp $OPENPOSE_ROOT/build/caffe/lib/* /usr/lib/x86_64-linux-gnu
 
-########### LET HER RIP ############
-ADD . /opt/anchormen
-WORKDIR /opt/anchormen/
-#RUN pip3 install -r requirements.txt
-
-ENV LD_LIBRARY_PATH /usr/lib/x86_64-linux-gnu/
+# Some more lib linking
+ENV LD_LIBRARY_PATH /usr/lib/x86_64-linux-gnu
+ENV PYTHONPATH $OPENPOSE_ROOT/build/python:$OPENPOSE_ROOT/build/caffe/python
+ENV BOOST_LIBRARYDIR /usr/lib/x86_64-linux-gnu/
+ENV BOOST_ROOT /usr/lib/x86_64-linux-gnu/
 
 # This is important because the demo is Qt4 based and otherwise you'll get a weird X server error
 # https://stackoverflow.com/a/35040140/543720
 # https://stackoverflow.com/a/55989420/543720
 ENV QT_GRAPHICSSYSTEM "native"
 ENV QT_X11_NO_MITSHM 1
+
+########### LET HER RIP ############
+VOLUME /opt/anchormen
+WORKDIR /opt/anchormen/
+#RUN pip3 install -r requirements.txt
+
+
 
 #ENTRYPOINT ["python3", "demo.py"]

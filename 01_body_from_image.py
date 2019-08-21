@@ -9,8 +9,8 @@ from openpose import pyopenpose as op
 
 # Flags
 parser = argparse.ArgumentParser()
-parser.add_argument("--image_path", default="../../../examples/media/COCO_val2014_000000000192.jpg", help="Process an image. Read all standard formats (jpg, png, bmp, etc.).")
-parser.add_argument("--model_path", default="../../../models/", help="Path to the model directory")
+parser.add_argument("--image_path", default="/opt/openpose/examples/media/COCO_val2014_000000000192.jpg", help="Process an image. Read all standard formats (jpg, png, bmp, etc.).")
+parser.add_argument("--model_path", default="/opt/openpose/models/", help="Path to the model directory")
 args = parser.parse_known_args()
 
 # Custom Params (refer to include/openpose/flags.hpp for more parameters)
@@ -49,6 +49,7 @@ try:
     print("Body keypoints: \n" + str(datum.poseKeypoints))
     cv2.imshow("OpenPose 1.5.0 - Tutorial Python API", datum.cvOutputData)
     cv2.waitKey(0)
+
 except Exception as e:
-    # print(e)
+    print(e)
     sys.exit(-1)
