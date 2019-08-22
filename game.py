@@ -61,17 +61,13 @@ class PoseLogoSlapGame(object):
     """
 
     def __init__(self, screen_dims, image_path, pose_estimator):
-        # Space
+        # Physics
         self.space = pymunk.Space()
         self.space.gravity = (0.0, 900.0)
-
-        # Physics
-        # Time step
         self.dt = 1.0 / 60.0
-        # Number of physics steps per screen frame
         self.physics_steps_per_frame = 1
 
-        # pygame
+        # PyGame
         pygame.init()
         self.screen_dims = screen_dims
         self.screen = pygame.display.set_mode(self.screen_dims)
@@ -87,6 +83,18 @@ class PoseLogoSlapGame(object):
         self.logo = Logo((x, y), image_path)
         self.space.add(self.logo.box.body, self.logo.box)
 
+        # Setup bounding box around the screen, the lines start in the top left and go clockwise
+        static_body = self.space.static_body
+        static_lines = [pymunk.Segment(static_body, (0, 0), (screen_dims[0], 0), 0.0),
+                        pymunk.Segment(static_body, (screen_dims[0], 0), (screen_dims[0], screen_dims[1]), 0.0),
+                        pymunk.Segment(static_body, (screen_dims[0], screen_dims[1]), (0, screen_dims[1]), 0.0),
+                        pymunk.Segment(static_body, (0, screen_dims[1]), (0, 0), 0.0)]
+        for line in static_lines:
+            line.elasticity = 0.95
+            line.friction = 0.9
+        self.space.add(static_lines)
+
+        # Setup pose estimator
         self.pose_estimator = pose_estimator
         self.background = None
 
