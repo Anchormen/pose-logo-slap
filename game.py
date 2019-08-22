@@ -65,7 +65,7 @@ class PoseLogoSlapGame(object):
     def __init__(self, screen_dims, image_path, pose_estimator):
         # Physics
         self.space = pymunk.Space()
-        self.space.gravity = (0.0, 900.0)
+        self.space.gravity = (0.0, 600.0)
         self.dt = 1.0 / 60.0
         self.physics_steps_per_frame = 1
 
@@ -167,6 +167,7 @@ class PoseLogoSlapGame(object):
         shape.friction = 0.9
 
         self.space.add(body, shape)
+        self.space.add_collision_handler()
         self.test_ball = shape
 
     def clear_screen(self):
