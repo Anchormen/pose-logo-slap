@@ -16,13 +16,31 @@ import numpy as np
 import camera
 from pose_estimator import PoseEstimator
 
+GOAL_MARGIN = 5
 LOGO_RADIUS = 2
 LOGO_MASS = 5
 LOGO_FRICTION = 0.95
 LOGO_ELASTICITY = 1.0
 LOGO_SIZE = (60, 60)
+RELATIVE_GOAL_SIZE = 0.2
 
 pymunk.pygame_util.positive_y_is_up = False
+
+
+class GoalPost(object):
+
+    def __init__(self, static_body, first_pos, second_pos, radius):
+        self.shape = pymunk.Segment(static_body, first_pos, second_pos, radius)
+        self.shape.elasticity = 0.95
+        self.shape.friction = 0.9
+
+        self.goals_scored = 0
+
+    def goal_scored(self):
+        self.goals_scored += 1
+
+    def reset(self):
+        self.goals_scored = 1
 
 
 class Logo(pygame.sprite.Sprite):
@@ -85,6 +103,26 @@ class PoseLogoSlapGame(object):
         self.logo = Logo((x, y), image_path)
         self.space.add(self.logo.box.body, self.logo.box)
 
+        self.setup_screen_bounds(screen_dims)
+
+        static_body = self.space.static_body
+        goal_length = screen_dims[1] * RELATIVE_GOAL_SIZE
+        self.left_goal = GoalPost(static_body, (GOAL_MARGIN, screen_dims[1] - GOAL_MARGIN),
+                                  (GOAL_MARGIN, screen_dims[1] - (goal_length + GOAL_MARGIN)), GOAL_MARGIN)
+        self.right_goal = GoalPost(static_body, (screen_dims[0] - GOAL_MARGIN, screen_dims[1] - GOAL_MARGIN),
+                                   (screen_dims[0] - GOAL_MARGIN, screen_dims[1] - (goal_length + GOAL_MARGIN)),
+                                   GOAL_MARGIN)
+        self.space.add([self.left_goal.shape, self.right_goal.shape])
+
+        self.test_ball = None
+
+        # Setup pose estimator
+        self.pose_estimator = pose_estimator
+        self.background = None
+
+        self.running = True
+
+    def setup_screen_bounds(self, screen_dims):
         # Setup bounding box around the screen, the lines start in the top left and go clockwise
         static_body = self.space.static_body
         static_lines = [pymunk.Segment(static_body, (0, 0), (screen_dims[0], 0), 0.0),
@@ -95,14 +133,6 @@ class PoseLogoSlapGame(object):
             line.elasticity = 0.95
             line.friction = 0.9
         self.space.add(static_lines)
-
-        self.test_ball = None
-
-        # Setup pose estimator
-        self.pose_estimator = pose_estimator
-        self.background = None
-
-        self.running = True
 
     def run(self):
         """
@@ -139,6 +169,8 @@ class PoseLogoSlapGame(object):
                 self.running = False
             elif event.type == KEYDOWN and event.key == K_ESCAPE:
                 self.running = False
+            elif event.type == KEYDOWN and event.key == K_r:
+                self.reset_game()
             elif event.type == MOUSEBUTTONDOWN:
                 if not self.test_ball:
                     self.create_ball()
@@ -167,7 +199,6 @@ class PoseLogoSlapGame(object):
         shape.friction = 0.9
 
         self.space.add(body, shape)
-        self.space.add_collision_handler()
         self.test_ball = shape
 
     def clear_screen(self):
@@ -195,6 +226,14 @@ class PoseLogoSlapGame(object):
         out = np.swapaxes(out, 0, 1).astype(np.uint8)
         out = np.flip(out, axis=2)
         self.background = out
+
+    def reset_game(self):
+        print("Resetting game, previous scores:")
+        print("Left player scored " + self.right_goal.goals_scored)
+        print("Right player scored " + self.left_goal.goals_scored)
+
+        self.right_goal.reset()
+        self.left_goal.reset()
 
 
 if __name__ == '__main__':
