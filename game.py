@@ -1,4 +1,5 @@
 """
+A game to slap a logo in the other player's goal using your arms/hands as detected by OpenPose
 
 @author: Jeroen Vlek <j.vlek@anchormen.nl>
 """
@@ -19,7 +20,9 @@ LOGO_ELASTICITY = 0.95
 
 
 class Logo(pygame.sprite.Sprite):
-
+    """
+    The logo or "ball" with which to be scored
+    """
     def __init__(self, spawn_point, image_path):
         _box = self.create_logo_box()
         self.image = pygame.image.load(image_path)
@@ -30,7 +33,7 @@ class Logo(pygame.sprite.Sprite):
     @staticmethod
     def create_logo_box(rect):
         """
-        Create a ball.
+        Create the properies for the PyMunk physics engine to use this sprite.
         :return:
         """
         inertia = pymunk.moment_for_box(LOGO_MASS, rect.size)
@@ -45,7 +48,10 @@ class Logo(pygame.sprite.Sprite):
         return box
 
 
-class PoseLogoSlap(object):
+class PoseLogoSlapGame(object):
+    """
+    Main game class
+    """
 
     def __init__(self, screen_dims, model_path, cam, image_path):
         # Space
@@ -165,5 +171,5 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     cam = camera.get_camera_streaming(args.width, args.height)
-    game = PoseLogoSlap((args.width, args.height), args.model_path, cam, args.image_path)
+    game = PoseLogoSlapGame((args.width, args.height), args.model_path, cam, args.image_path)
     game.run()
