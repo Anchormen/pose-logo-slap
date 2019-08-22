@@ -37,9 +37,8 @@ class Logo(pygame.sprite.Sprite):
         self.box = Logo.create_logo_box(self.rect)
 
     def update(self):
-        self.rect.center = self.box.body.position
         self.image = pygame.transform.rotate(self.original_image, math.degrees(-self.box.body.angle))
-        self.rect = self.image.get_rect(center=self.rect.center)
+        self.rect = self.image.get_rect(center=self.box.body.position)
 
     @staticmethod
     def create_logo_box(rect):
