@@ -12,8 +12,8 @@ from pygame.color import *
 import pymunk
 import pymunk.pygame_util
 import numpy as np
-from openpose import pyopenpose
 import camera
+from pose_estimator import PoseEstimator
 
 LOGO_RADIUS = 2
 LOGO_MASS = 5
@@ -60,7 +60,7 @@ class PoseLogoSlapGame(object):
     Main game class
     """
 
-    def __init__(self, screen_dims, model_path, cam, image_path):
+    def __init__(self, screen_dims, image_path, pose_estimator):
         # Space
         self.space = pymunk.Space()
         self.space.gravity = (0.0, 900.0)
@@ -79,17 +79,6 @@ class PoseLogoSlapGame(object):
 
         self.draw_options = pymunk.pygame_util.DrawOptions(self.screen)
 
-        # Setup OpenPose
-        # params = dict()
-        # params["model_folder"] = model_path
-        # op = pyopenpose.WrapperPython()
-        # op.configure(params)
-        # op.start()
-        # self.op = op
-        # self.camera = cam
-        # self.background = None
-        # self.update_pose()
-
         # Setup logo
         mid_point = (self.screen_dims[0] / 2, self.screen_dims[1] / 2)
         quarter_screen_dims = (mid_point[0] / 2, mid_point[1] / 2)
@@ -97,6 +86,9 @@ class PoseLogoSlapGame(object):
         y = random.randint(mid_point[1] - quarter_screen_dims[1], mid_point[1] + quarter_screen_dims[1])
         self.logo = Logo((x, y), image_path)
         self.space.add(self.logo.box.body, self.logo.box)
+
+        self.pose_estimator = pose_estimator
+        self.background = None
 
         self.running = True
 
@@ -137,17 +129,19 @@ class PoseLogoSlapGame(object):
                 self.running = False
             elif event.type == MOUSEBUTTONUP:
                 print("Mouse position: " + str(pygame.mouse.get_pos()))
-            # elif event.type == KEYDOWN and event.key == K_SPACE:
-            #     print("Updating pose")
-            #     self.update_pose()
+            elif event.type == KEYDOWN and event.key == K_SPACE:
+                self.update_pose()
 
     def clear_screen(self):
         """
         Clears the screen.
         :return: None
         """
-        # pygame.surfarray.blit_array(self.screen, self.background)
-        self.screen.fill(THECOLORS["white"])
+
+        if self.background is not None:
+            pygame.surfarray.blit_array(self.screen, self.background)
+        else:
+            self.screen.fill(THECOLORS["white"])
 
     def draw_objects(self):
         """
@@ -158,11 +152,7 @@ class PoseLogoSlapGame(object):
         self.screen.blit(self.logo.image, self.logo.rect.topleft)
 
     def update_pose(self):
-        _, frame = self.camera.read()
-        datum = pyopenpose.Datum()
-        datum.cvInputData = frame
-        self.op.emplaceAndPop([datum])
-
+        datum = self.pose_estimator.grab_pose()
         out = datum.cvOutputData
         out = np.swapaxes(out, 0, 1).astype(np.uint8)
         out = np.flip(out, axis=2)
@@ -182,6 +172,8 @@ if __name__ == '__main__':
     parser.add_argument("--image_path", default="/opt/anchormen/logo.png", help="Path to the logo")
     args = parser.parse_args()
 
-    cam = camera.get_camera_streaming(args.width, args.height)
-    game = PoseLogoSlapGame((args.width, args.height), args.model_path, cam, args.image_path)
+    camera = camera.get_camera_streaming(args.width, args.height)
+    pose_estimator = PoseEstimator(args.model_path, camera)
+    game = PoseLogoSlapGame((args.width, args.height), args.image_path, pose_estimator)
+
     game.run()
