@@ -6,6 +6,7 @@ A game to slap a logo in the other player's goal using your arms/hands as detect
 
 import argparse
 import random
+import math
 import pygame
 from pygame.locals import *
 from pygame.color import *
@@ -31,12 +32,14 @@ class Logo(pygame.sprite.Sprite):
 
     def __init__(self, spawn_point, image_path, logo_size=LOGO_SIZE):
         raw_image = pygame.image.load(image_path)
-        self.image = pygame.transform.scale(raw_image, logo_size)
+        self.image = self.original_image = pygame.transform.scale(raw_image, logo_size)
         self.rect = self.image.get_rect(center=spawn_point)
         self.box = Logo.create_logo_box(self.rect)
 
     def update(self):
         self.rect.center = self.box.body.position
+        self.image = pygame.transform.rotate(self.original_image, math.degrees(-self.box.body.angle))
+        self.rect = self.image.get_rect(center=self.rect.center)
 
     @staticmethod
     def create_logo_box(rect):
