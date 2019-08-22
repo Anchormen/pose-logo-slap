@@ -42,7 +42,7 @@ ENV QT_X11_NO_MITSHM 1
 # our own stuff
 #ADD . /opt/anchormen
 WORKDIR /opt/anchormen/
-RUN pip3 install -r requirements.txt
+#RUN pip3 install -r requirements.txt
 
 
 

@@ -8,27 +8,35 @@ import argparse
 import random
 import pygame
 from pygame.locals import *
+from pygame.color import *
 import pymunk
 import pymunk.pygame_util
 import numpy as np
 from openpose import pyopenpose
 import camera
 
-LOGO_MASS = 10
+LOGO_RADIUS = 2
+LOGO_MASS = 5
 LOGO_FRICTION = 0.9
 LOGO_ELASTICITY = 0.95
+LOGO_SIZE = (60, 60)
+
+pymunk.pygame_util.positive_y_is_up = False
 
 
 class Logo(pygame.sprite.Sprite):
     """
     The logo or "ball" with which to be scored
     """
-    def __init__(self, spawn_point, image_path):
-        _box = self.create_logo_box()
-        self.image = pygame.image.load(image_path)
-        self.rect = self.image.get_rect()
-        self.rect.x, self.rect.y = spawn_point
+
+    def __init__(self, spawn_point, image_path, logo_size=LOGO_SIZE):
+        raw_image = pygame.image.load(image_path)
+        self.image = pygame.transform.scale(raw_image, logo_size)
+        self.rect = self.image.get_rect(center=spawn_point)
         self.box = Logo.create_logo_box(self.rect)
+
+    def update(self):
+        self.rect.center = self.box.body.position
 
     @staticmethod
     def create_logo_box(rect):
@@ -40,8 +48,7 @@ class Logo(pygame.sprite.Sprite):
         body = pymunk.Body(LOGO_MASS, inertia)
         body.position = rect.center
 
-        radius = max(rect.width, rect.height)
-        box = pymunk.Poly(body, rect.size, radius)
+        box = pymunk.Poly.create_box(body, rect.size, LOGO_RADIUS)
         box.elasticity = LOGO_ELASTICITY
         box.friction = LOGO_FRICTION
 
@@ -56,7 +63,7 @@ class PoseLogoSlapGame(object):
     def __init__(self, screen_dims, model_path, cam, image_path):
         # Space
         self.space = pymunk.Space()
-        self.space.gravity = (0.0, -900.0)
+        self.space.gravity = (0.0, 900.0)
 
         # Physics
         # Time step
@@ -86,10 +93,10 @@ class PoseLogoSlapGame(object):
         # Setup logo
         mid_point = (self.screen_dims[0] / 2, self.screen_dims[1] / 2)
         quarter_screen_dims = (mid_point[0] / 2, mid_point[1] / 2)
-        x = random.randint(mid_point[0] - quarter_screen_dims, mid_point[0] + quarter_screen_dims)
-        y = random.randint(mid_point[1] - quarter_screen_dims, mid_point[1] + quarter_screen_dims)
+        x = random.randint(mid_point[0] - quarter_screen_dims[0], mid_point[0] + quarter_screen_dims[0])
+        y = random.randint(mid_point[1] - quarter_screen_dims[1], mid_point[1] + quarter_screen_dims[1])
         self.logo = Logo((x, y), image_path)
-        self._space.add(self.logo.box.body, self.logo.box)
+        self.space.add(self.logo.box.body, self.logo.box)
 
         self.running = True
 
@@ -110,6 +117,7 @@ class PoseLogoSlapGame(object):
             # self.update_pose()
             # TODO update pose
             # TODO update logo
+            self.logo.update()
             self.draw_objects()
 
             pygame.display.flip()
@@ -127,6 +135,8 @@ class PoseLogoSlapGame(object):
                 self.running = False
             elif event.type == KEYDOWN and event.key == K_ESCAPE:
                 self.running = False
+            elif event.type == MOUSEBUTTONUP:
+                print("Mouse position: " + str(pygame.mouse.get_pos()))
             # elif event.type == KEYDOWN and event.key == K_SPACE:
             #     print("Updating pose")
             #     self.update_pose()
@@ -137,13 +147,15 @@ class PoseLogoSlapGame(object):
         :return: None
         """
         # pygame.surfarray.blit_array(self.screen, self.background)
+        self.screen.fill(THECOLORS["white"])
 
     def draw_objects(self):
         """
         Draw the objects.
         :return: None
         """
-        # self.space.debug_draw(self.draw_options)
+        self.space.debug_draw(self.draw_options)
+        self.screen.blit(self.logo.image, self.logo.rect.topleft)
 
     def update_pose(self):
         _, frame = self.camera.read()
@@ -162,8 +174,8 @@ if __name__ == '__main__':
     parser.add_argument('--cam_id', default=0, type=int, choices=[0, 1, 2],
                         help='Camera ID, 0 = built-in, 1 = external')
     parser.add_argument('--fps', type=int, default=15, help='Frames per second')
-    parser.add_argument('--width', type=int, default=640, help='Capture and display width')
-    parser.add_argument('--height', type=int, default=480, help='Capture and display height')
+    parser.add_argument('--width', type=int, default=1280, help='Capture and display width')
+    parser.add_argument('--height', type=int, default=720, help='Capture and display height')
     parser.add_argument('--fullscreen', action='store_true', dest='fullscreen',
                         help='If provided, displays in fullscreen')
     parser.add_argument("--model_path", default="/opt/openpose/models/", help="Path to the model directory")
