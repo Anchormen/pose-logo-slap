@@ -18,8 +18,8 @@ from pose_estimator import PoseEstimator
 
 LOGO_RADIUS = 2
 LOGO_MASS = 5
-LOGO_FRICTION = 0.9
-LOGO_ELASTICITY = 0.95
+LOGO_FRICTION = 0.95
+LOGO_ELASTICITY = 1.0
 LOGO_SIZE = (60, 60)
 
 pymunk.pygame_util.positive_y_is_up = False
@@ -96,6 +96,8 @@ class PoseLogoSlapGame(object):
             line.friction = 0.9
         self.space.add(static_lines)
 
+        self.test_ball = None
+
         # Setup pose estimator
         self.pose_estimator = pose_estimator
         self.background = None
@@ -137,10 +139,35 @@ class PoseLogoSlapGame(object):
                 self.running = False
             elif event.type == KEYDOWN and event.key == K_ESCAPE:
                 self.running = False
+            elif event.type == MOUSEBUTTONDOWN:
+                if not self.test_ball:
+                    self.create_ball()
+            elif event.type == MOUSEMOTION:
+                if self.test_ball:
+                    self.test_ball.body.position = pygame.mouse.get_pos()
             elif event.type == MOUSEBUTTONUP:
-                print("Mouse position: " + str(pygame.mouse.get_pos()))
+                if self.test_ball:
+                    self.space.remove(self.test_ball, self.test_ball.body)
+                self.test_ball = None
             elif event.type == KEYDOWN and event.key == K_SPACE:
                 self.update_pose()
+
+    def create_ball(self):
+        """
+        Create a ball.
+        :return:
+        """
+        mass = 100
+        radius = 25
+        inertia = pymunk.moment_for_circle(mass, 0, radius, (0, 0))
+        body = pymunk.Body(mass, inertia, pymunk.Body.KINEMATIC)
+        body.position = pygame.mouse.get_pos()
+        shape = pymunk.Circle(body, radius, (0, 0))
+        shape.elasticity = 0.95
+        shape.friction = 0.9
+
+        self.space.add(body, shape)
+        self.test_ball = shape
 
     def clear_screen(self):
         """
