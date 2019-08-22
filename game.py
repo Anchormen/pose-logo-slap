@@ -2,36 +2,52 @@
 
 @author: Jeroen Vlek <j.vlek@anchormen.nl>
 """
+
 import argparse
-
-"""This example spawns (bouncing) balls randomly on a L-shape constructed of 
-two segment shapes. Not interactive.
-"""
-
-__version__ = "$Id:$"
-__docformat__ = "reStructuredText"
-
-# Python imports
 import random
-
-# Library imports
 import pygame
-from pygame.key import *
 from pygame.locals import *
-from pygame.color import *
-
-# pymunk imports
 import pymunk
 import pymunk.pygame_util
-
 import numpy as np
 from openpose import pyopenpose
 import camera
 
+LOGO_MASS = 10
+LOGO_FRICTION = 0.9
+LOGO_ELASTICITY = 0.95
+
+
+class Logo(pygame.sprite.Sprite):
+
+    def __init__(self, spawn_point, image_path):
+        _box = self.create_logo_box()
+        self.image = pygame.image.load(image_path)
+        self.rect = self.image.get_rect()
+        self.rect.x, self.rect.y = spawn_point
+        self.box = Logo.create_logo_box(self.rect)
+
+    @staticmethod
+    def create_logo_box(rect):
+        """
+        Create a ball.
+        :return:
+        """
+        inertia = pymunk.moment_for_box(LOGO_MASS, rect.size)
+        body = pymunk.Body(LOGO_MASS, inertia)
+        body.position = rect.center
+
+        radius = max(rect.width, rect.height)
+        box = pymunk.Poly(body, rect.size, radius)
+        box.elasticity = LOGO_ELASTICITY
+        box.friction = LOGO_FRICTION
+
+        return box
+
 
 class PoseLogoSlap(object):
 
-    def __init__(self, screen_dims, model_path, cam):
+    def __init__(self, screen_dims, model_path, cam, image_path):
         # Space
         self.space = pymunk.Space()
         self.space.gravity = (0.0, -900.0)
@@ -42,14 +58,6 @@ class PoseLogoSlap(object):
         # Number of physics steps per screen frame
         self.physics_steps_per_frame = 1
 
-        # Setup OpenPose
-        params = dict()
-        params["model_folder"] = model_path
-        op = pyopenpose.WrapperPython()
-        op.configure(params)
-        op.start()
-        self.op = op
-
         # pygame
         pygame.init()
         self.screen_dims = screen_dims
@@ -58,8 +66,24 @@ class PoseLogoSlap(object):
 
         self.draw_options = pymunk.pygame_util.DrawOptions(self.screen)
 
-        self.camera = cam
-        self.update_background()
+        # Setup OpenPose
+        # params = dict()
+        # params["model_folder"] = model_path
+        # op = pyopenpose.WrapperPython()
+        # op.configure(params)
+        # op.start()
+        # self.op = op
+        # self.camera = cam
+        # self.background = None
+        # self.update_pose()
+
+        # Setup logo
+        mid_point = (self.screen_dims[0] / 2, self.screen_dims[1] / 2)
+        quarter_screen_dims = (mid_point[0] / 2, mid_point[1] / 2)
+        x = random.randint(mid_point[0] - quarter_screen_dims, mid_point[0] + quarter_screen_dims)
+        y = random.randint(mid_point[1] - quarter_screen_dims, mid_point[1] + quarter_screen_dims)
+        self.logo = Logo((x, y), image_path)
+        self._space.add(self.logo.box.body, self.logo.box)
 
         self.running = True
 
@@ -68,7 +92,8 @@ class PoseLogoSlap(object):
         The main loop of the game.
         :return: None
         """
-        # Main loop
+
+        print("Starting game loop")
         while self.running:
             # Progress time forward
             for x in range(self.physics_steps_per_frame):
@@ -76,7 +101,7 @@ class PoseLogoSlap(object):
 
             self.process_events()
             self.clear_screen()
-            self.update_background()
+            # self.update_pose()
             # TODO update pose
             # TODO update logo
             self.draw_objects()
@@ -96,14 +121,16 @@ class PoseLogoSlap(object):
                 self.running = False
             elif event.type == KEYDOWN and event.key == K_ESCAPE:
                 self.running = False
+            # elif event.type == KEYDOWN and event.key == K_SPACE:
+            #     print("Updating pose")
+            #     self.update_pose()
 
     def clear_screen(self):
         """
         Clears the screen.
         :return: None
         """
-        self.screen.fill(THECOLORS["white"])
-        self.update_background()
+        # pygame.surfarray.blit_array(self.screen, self.background)
 
     def draw_objects(self):
         """
@@ -112,7 +139,7 @@ class PoseLogoSlap(object):
         """
         # self.space.debug_draw(self.draw_options)
 
-    def update_background(self):
+    def update_pose(self):
         _, frame = self.camera.read()
         datum = pyopenpose.Datum()
         datum.cvInputData = frame
@@ -121,7 +148,7 @@ class PoseLogoSlap(object):
         out = datum.cvOutputData
         out = np.swapaxes(out, 0, 1).astype(np.uint8)
         out = np.flip(out, axis=2)
-        pygame.surfarray.blit_array(self.screen, out)
+        self.background = out
 
 
 if __name__ == '__main__':
@@ -134,8 +161,9 @@ if __name__ == '__main__':
     parser.add_argument('--fullscreen', action='store_true', dest='fullscreen',
                         help='If provided, displays in fullscreen')
     parser.add_argument("--model_path", default="/opt/openpose/models/", help="Path to the model directory")
+    parser.add_argument("--image_path", default="/opt/anchormen/logo.png", help="Path to the logo")
     args = parser.parse_args()
 
     cam = camera.get_camera_streaming(args.width, args.height)
-    game = PoseLogoSlap((args.width, args.height), args.model_path, cam)
+    game = PoseLogoSlap((args.width, args.height), args.model_path, cam, args.image_path)
     game.run()
