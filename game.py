@@ -17,12 +17,17 @@ import camera
 from pose_estimator import PoseEstimator
 
 GOAL_MARGIN = 5
+RELATIVE_GOAL_SIZE = 0.2
+
 LOGO_RADIUS = 2
 LOGO_MASS = 5
 LOGO_FRICTION = 0.95
 LOGO_ELASTICITY = 1.0
 LOGO_SIZE = (60, 60)
-RELATIVE_GOAL_SIZE = 0.2
+
+# Taken from: https://github.com/CMU-Perceptual-Computing-Lab/openpose/blob/master/doc/output.md
+LEFT_WRIST_IDX = 7
+RIGHT_WRIST_IDX = 4
 
 pymunk.pygame_util.positive_y_is_up = False
 
@@ -83,7 +88,7 @@ class PoseLogoSlapGame(object):
     def __init__(self, screen_dims, image_path, pose_estimator):
         # Physics
         self.space = pymunk.Space()
-        self.space.gravity = (0.0, 600.0)
+        # self.space.gravity = (0.0, 600.0)
         self.dt = 1.0 / 60.0
         self.physics_steps_per_frame = 1
 
@@ -174,7 +179,7 @@ class PoseLogoSlapGame(object):
                 self.reset_game()
             elif event.type == MOUSEBUTTONDOWN:
                 if not self.test_ball:
-                    self.create_ball()
+                    self.test_ball = self.create_ball()
             elif event.type == MOUSEMOTION:
                 if self.test_ball:
                     self.test_ball.body.position = pygame.mouse.get_pos()
@@ -183,7 +188,7 @@ class PoseLogoSlapGame(object):
                     self.space.remove(self.test_ball, self.test_ball.body)
                 self.test_ball = None
             elif event.type == KEYDOWN and event.key == K_SPACE:
-                self.update_pose()
+                self.update_poses()
 
     def create_ball(self):
         """
@@ -200,7 +205,7 @@ class PoseLogoSlapGame(object):
         shape.friction = 0.9
 
         self.space.add(body, shape)
-        self.test_ball = shape
+        return shape
 
     def clear_screen(self):
         """
@@ -221,8 +226,28 @@ class PoseLogoSlapGame(object):
         self.space.debug_draw(self.draw_options)
         self.screen.blit(self.logo.image, self.logo.rect.topleft)
 
-    def update_pose(self):
+    def update_poses(self):
         datum = self.pose_estimator.grab_pose()
+
+        print("Number of poses detected: " + str(len(datum.poseKeypoints)))
+
+        for pose in datum.poseKeypoints:
+
+            right_wrist_pos = None
+            if pose[RIGHT_WRIST_IDX][2] > 0:
+                right_wrist_pos = (int(pose[RIGHT_WRIST_IDX][0]), int(pose[RIGHT_WRIST_IDX][1]))
+                right_ball = self.create_ball()
+                right_ball.body.position = right_wrist_pos
+
+            left_wrist_pos = None
+            if pose[LEFT_WRIST_IDX][2] > 0:
+                left_wrist_pos = (int(pose[LEFT_WRIST_IDX][0]), int(pose[LEFT_WRIST_IDX][1]))
+                left_ball = self.create_ball()
+                left_ball.body.position = left_wrist_pos
+
+            print("Right wrist: " + str(right_wrist_pos))
+            print("Left wrist: " + str(left_wrist_pos))
+
         out = datum.cvOutputData
         out = np.swapaxes(out, 0, 1).astype(np.uint8)
         out = np.flip(out, axis=2)
