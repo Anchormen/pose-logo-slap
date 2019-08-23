@@ -102,6 +102,7 @@ class PoseLogoSlapGame(object):
         y = random.randint(mid_point[1] - quarter_screen_dims[1], mid_point[1] + quarter_screen_dims[1])
         self.logo = Logo((x, y), image_path)
         self.space.add(self.logo.box.body, self.logo.box)
+        pygame.display.set_icon(self.logo.image)
 
         self.setup_screen_bounds(screen_dims)
 
