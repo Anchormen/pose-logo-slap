@@ -21,6 +21,8 @@ PUSH_BODY_ELASTICITY = 1.0
 PUSH_BODY_RADIUS = 50
 PUSH_BODY_MASS = 100
 
+COUNTER_MARGIN = 20
+
 GOAL_MARGIN = 5
 RELATIVE_GOAL_SIZE = 0.2
 
@@ -38,25 +40,51 @@ COLLTYPE_GOAL = 3
 LEFT_WRIST_IDX = 7
 RIGHT_WRIST_IDX = 4
 
+FONT_NAME = 'Comic Sans MS'
+FONT_SIZE = 60
+FONT_COLOR = (229, 11, 20)
+
 pymunk.pygame_util.positive_y_is_up = False
+pygame.font.init()
 
 
-class GoalPost(object):
+class ScoreCounter(object):
+    font = pygame.font.SysFont(FONT_NAME, FONT_SIZE)
 
-    def __init__(self, static_body, first_pos, second_pos, radius):
-        self.shape = pymunk.Segment(static_body, first_pos, second_pos, radius)
-        self.shape.elasticity = 1.0
-        self.shape.friction = 0.9
-
-        self.shape.collision_type = COLLTYPE_GOAL
-
-        self.goals_scored = 0
-
-    def goal_scored(self):
-        self.goals_scored += 1
+    def __init__(self, pos):
+        self.pos = pos
+        self.score = 0
+        self.text = ScoreCounter.font.render(str(self.score), False, FONT_COLOR)
 
     def reset(self):
-        self.goals_scored = 1
+        self.set_score(0)
+
+    def set_score(self, score):
+        self.score = score
+        self.text = ScoreCounter.font.render(str(self.score), False, FONT_COLOR)
+
+    def add_goal(self):
+        self.set_score(self.score + 1)
+
+
+class GoalPost(pymunk.Segment):
+
+    def __init__(self, body, first_pos, second_pos, radius, counter):
+        super(GoalPost, self).__init__(body, first_pos, second_pos, radius)
+        self.elasticity = 1.0
+        self.friction = 0.9
+        self.collision_type = COLLTYPE_GOAL
+
+        self.counter = counter
+
+    def reset(self):
+        self.counter.reset()
+
+    @staticmethod
+    def goal_scored_handler(arbiter, space, data):
+        _, goal = arbiter.shapes
+        goal.counter.add_goal()
+        print("Goal scored")
 
 
 class PushBody(object):
@@ -65,14 +93,12 @@ class PushBody(object):
     """
 
     def __init__(self, pos):
-        mass = PUSH_BODY_MASS
-        radius = PUSH_BODY_RADIUS
-        inertia = pymunk.moment_for_circle(mass, 0, radius, (0, 0))
+        inertia = pymunk.moment_for_circle(PUSH_BODY_MASS, 0, PUSH_BODY_RADIUS, (0, 0))
 
-        self.body = pymunk.Body(mass, inertia, pymunk.Body.KINEMATIC)
+        self.body = pymunk.Body(PUSH_BODY_MASS, inertia, pymunk.Body.KINEMATIC)
         self.body.position = pos
 
-        self.shape = pymunk.Circle(self.body, radius, (0, 0))
+        self.shape = pymunk.Circle(self.body, PUSH_BODY_RADIUS, (0, 0))
         self.shape.collision_type = COLLTYPE_MOUSE
         self.shape.elasticity = PUSH_BODY_ELASTICITY
         self.shape.friction = PUSH_BODY_FRICTION
@@ -115,7 +141,7 @@ class Logo(pygame.sprite.Sprite):
         box = pymunk.Poly.create_box(body, rect.size, LOGO_RADIUS)
         box.elasticity = LOGO_ELASTICITY
         box.friction = LOGO_FRICTION
-        box.collision_type = COLLTYPE_GOAL
+        box.collision_type = COLLTYPE_LOGO
 
         return box
 
@@ -132,6 +158,7 @@ class PoseLogoSlapGame(object):
         self.space.damping = 0.6
         self.dt = 1.0 / 60.0
         self.physics_steps_per_frame = 1
+        self.space.add_collision_handler(COLLTYPE_LOGO, COLLTYPE_GOAL).separate = GoalPost.goal_scored_handler
 
         # PyGame
         pygame.init()
@@ -152,14 +179,18 @@ class PoseLogoSlapGame(object):
 
         self.setup_screen_bounds(screen_dims)
 
+        # the right counter, is updated when the left goal gets a goal and vice versa
+        right_counter = ScoreCounter((screen_dims[0] - COUNTER_MARGIN, COUNTER_MARGIN))
+        left_counter = ScoreCounter((COUNTER_MARGIN, COUNTER_MARGIN))
+
         static_body = self.space.static_body
         goal_length = screen_dims[1] * RELATIVE_GOAL_SIZE
         self.left_goal = GoalPost(static_body, (GOAL_MARGIN, (screen_dims[1] / 2 - goal_length / 2)),
-                                  (GOAL_MARGIN, (screen_dims[1] / 2 + goal_length / 2)), GOAL_MARGIN)
+                                  (GOAL_MARGIN, (screen_dims[1] / 2 + goal_length / 2)), GOAL_MARGIN, right_counter)
         self.right_goal = GoalPost(static_body, (screen_dims[0] - GOAL_MARGIN, (screen_dims[1] / 2 - goal_length / 2)),
                                    (screen_dims[0] - GOAL_MARGIN, (screen_dims[1] / 2 + goal_length / 2)),
-                                   GOAL_MARGIN)
-        self.space.add([self.left_goal.shape, self.right_goal.shape])
+                                   GOAL_MARGIN, left_counter)
+        self.space.add([self.left_goal, self.right_goal])
 
         self.test_push_body = None
 
@@ -253,6 +284,8 @@ class PoseLogoSlapGame(object):
         """
         self.space.debug_draw(self.draw_options)
         self.screen.blit(self.logo.image, self.logo.rect.topleft)
+        self.screen.blit(self.left_goal.counter.text, self.left_goal.counter.pos)
+        self.screen.blit(self.right_goal.counter.text, self.right_goal.counter.pos)
 
     def update_poses(self):
         datum = self.pose_estimator.grab_pose()
@@ -283,8 +316,8 @@ class PoseLogoSlapGame(object):
 
     def reset_game(self):
         print("Resetting game, previous scores:")
-        print("Left player scored " + self.right_goal.goals_scored)
-        print("Right player scored " + self.left_goal.goals_scored)
+        print("Left player scored " + str(self.right_goal.counter.score))
+        print("Right player scored " + str(self.left_goal.counter.score))
 
         self.right_goal.reset()
         self.left_goal.reset()
