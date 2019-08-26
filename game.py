@@ -151,7 +151,7 @@ class PoseLogoSlapGame(object):
     Main game class
     """
 
-    def __init__(self, screen_dims, image_path, pose_estimator):
+    def __init__(self, screen_dims, image_path, pose_estimator, gpu_mode):
         # Physics
         self.space = pymunk.Space()
         # self.space.gravity = (0.0, 600.0)
@@ -198,6 +198,7 @@ class PoseLogoSlapGame(object):
         self.pose_estimator = pose_estimator
         self.background = None
 
+        self.gpu_mode = gpu_mode
         self.running = True
 
     def setup_screen_bounds(self, screen_dims):
@@ -226,9 +227,8 @@ class PoseLogoSlapGame(object):
 
             self.process_events()
             self.clear_screen()
-            # self.update_pose()
-            # TODO update pose
-            # TODO update logo
+            if self.gpu_mode:
+                self.update_pose()
             self.logo.update()
             self.draw_objects()
 
@@ -334,10 +334,11 @@ if __name__ == '__main__':
                         help='If provided, displays in fullscreen')
     parser.add_argument("--model_path", default="/opt/openpose/models/", help="Path to the model directory")
     parser.add_argument("--image_path", default="/opt/anchormen/logo.png", help="Path to the logo")
+    parser.add_argument("--gpu", default=False, type=bool)
     args = parser.parse_args()
 
     camera = camera.get_camera_streaming(args.width, args.height)
     pose_estimator = PoseEstimator(args.model_path, camera)
-    game = PoseLogoSlapGame((args.width, args.height), args.image_path, pose_estimator)
+    game = PoseLogoSlapGame((args.width, args.height), args.image_path, pose_estimator, args.gpu)
 
     game.run()

@@ -44,7 +44,5 @@ ADD . /opt/anchormen
 WORKDIR /opt/anchormen/
 RUN pip3 install -r requirements.txt
 
-
-
 ########### LET HER RIP ############
-#ENTRYPOINT ["python3", "demo.py"]
+ENTRYPOINT ["python3", "game.py"]
