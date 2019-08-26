@@ -40,6 +40,7 @@ ENV QT_GRAPHICSSYSTEM "native"
 ENV QT_X11_NO_MITSHM 1
 
 # our own stuff
+RUN git clone https://gitlab.anchormen.nl/MarketingDS/models/pose-logo-slap /opt/anchormen
 ADD . /opt/anchormen
 WORKDIR /opt/anchormen/
 RUN pip3 install -r requirements.txt
