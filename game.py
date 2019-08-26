@@ -70,7 +70,7 @@ class ScoreCounter(object):
 class GoalPost(pymunk.Segment):
 
     def __init__(self, body, first_pos, second_pos, radius, counter):
-        super(GoalPost, self).__init__(body, first_pos, second_pos, radius)
+        super().__init__(body, first_pos, second_pos, radius)
         self.elasticity = 1.0
         self.friction = 0.9
         self.collision_type = COLLTYPE_GOAL
