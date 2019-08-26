@@ -86,6 +86,12 @@ class Logo(pygame.sprite.Sprite):
 
         return box
 
+    @staticmethod
+    def coll_type_handler(arbiter, space, data):
+        """ Increases the"""
+        s1,s2 = arbiter.shapes
+        s2.unsafe_set_radius(s2.radius + 0.15)
+        return False
 
 class PoseLogoSlapGame(object):
     """
@@ -128,6 +134,8 @@ class PoseLogoSlapGame(object):
         self.space.add([self.left_goal.shape, self.right_goal.shape])
 
         self.test_ball = None
+        self.space.add_collision_handler(COLLTYPE_MOUSE, COLLTYPE_LOGO).pre_solve=Logo.coll_type_handler
+
 
         # Setup pose estimator
         self.pose_estimator = pose_estimator
@@ -186,7 +194,7 @@ class PoseLogoSlapGame(object):
                 self.reset_game()
             elif event.type == MOUSEBUTTONDOWN:
                 if not self.test_ball:
-                    self.test_ball = self.create_ball()
+                    self.test_ball = self.create_box()
             elif event.type == MOUSEMOTION:
                 if self.test_ball:
                     pos = pygame.mouse.get_pos()
@@ -198,7 +206,7 @@ class PoseLogoSlapGame(object):
             elif event.type == KEYDOWN and event.key == K_SPACE:
                 self.update_poses()
 
-    def create_ball(self):
+    def create_box(self):
         """
         Create a ball.
         :return:
@@ -245,13 +253,13 @@ class PoseLogoSlapGame(object):
             right_wrist_pos = None
             if pose[RIGHT_WRIST_IDX][2] > 0:
                 right_wrist_pos = (int(pose[RIGHT_WRIST_IDX][0]), int(pose[RIGHT_WRIST_IDX][1]))
-                right_ball = self.create_ball()
+                right_ball = self.create_box()
                 right_ball.body.position = right_wrist_pos
 
             left_wrist_pos = None
             if pose[LEFT_WRIST_IDX][2] > 0:
                 left_wrist_pos = (int(pose[LEFT_WRIST_IDX][0]), int(pose[LEFT_WRIST_IDX][1]))
-                left_ball = self.create_ball()
+                left_ball = self.create_box()
                 left_ball.body.position = left_wrist_pos
 
             print("Right wrist: " + str(right_wrist_pos))
