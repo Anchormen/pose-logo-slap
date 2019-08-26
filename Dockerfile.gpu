@@ -23,8 +23,7 @@ RUN git clone https://github.com/CMU-Perceptual-Computing-Lab/openpose.git $OPEN
 
 #build it
 WORKDIR $OPENPOSE_ROOT/build
-#RUN cmake -DBUILD_PYTHON=ON -DGPU_MODE=CPU_ONLY -DUSE_MKL=OFF ..
-RUN cmake -DBUILD_PYTHON=ON -DGPU_MODE=GPU -DUSE_MKL=ON -DCMAKE_BUILD_TYPE=Release ..
+RUN cmake -DBUILD_PYTHON=ON ..
 RUN make -j8
 RUN cp $OPENPOSE_ROOT/build/caffe/lib/* /usr/lib/x86_64-linux-gnu
 
