@@ -102,6 +102,7 @@ class PoseLogoSlapGame(object):
         # Physics
         self.space = pymunk.Space()
         # self.space.gravity = (0.0, 600.0)
+        self.space.damping = 0.6
         self.dt = 1.0 / 60.0
         self.physics_steps_per_frame = 1
 
