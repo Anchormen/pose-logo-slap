@@ -180,7 +180,7 @@ class PoseLogoSlapGame(object):
         self.setup_screen_bounds(screen_dims)
 
         # the right counter, is updated when the left goal gets a goal and vice versa
-        right_counter = ScoreCounter((screen_dims[0] - COUNTER_MARGIN, COUNTER_MARGIN))
+        right_counter = ScoreCounter((screen_dims[0] - 2 * COUNTER_MARGIN, COUNTER_MARGIN))
         left_counter = ScoreCounter((COUNTER_MARGIN, COUNTER_MARGIN))
 
         static_body = self.space.static_body
