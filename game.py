@@ -133,7 +133,7 @@ class PoseLogoSlapGame(object):
                                    GOAL_MARGIN)
         self.space.add([self.left_goal.shape, self.right_goal.shape])
 
-        self.test_ball = None
+        self.test_box = None
         self.space.add_collision_handler(COLLTYPE_MOUSE, COLLTYPE_LOGO).pre_solve=Logo.coll_type_handler
 
 
@@ -193,16 +193,20 @@ class PoseLogoSlapGame(object):
             elif event.type == KEYDOWN and event.key == K_r:
                 self.reset_game()
             elif event.type == MOUSEBUTTONDOWN:
-                if not self.test_ball:
-                    self.test_ball = self.create_box()
+                if not self.test_box:
+                    self.test_box = self.create_box()
             elif event.type == MOUSEMOTION:
-                if self.test_ball:
+                if self.test_box:
                     pos = pygame.mouse.get_pos()
-                    self.test_ball.body.position = pymunk.Vec2d(pos[0], pos[1])
+                    new_pos = pymunk.Vec2d(pos[0], pos[1])
+                    old_pos = self.test_box.body.position
+                    new_v = (new_pos - old_pos) / self.dt
+                    self.test_box.body.position = new_pos
+                    self.test_box.body.velocity = new_v
             elif event.type == MOUSEBUTTONUP:
-                if self.test_ball:
-                    self.space.remove(self.test_ball, self.test_ball.body)
-                self.test_ball = None
+                if self.test_box:
+                    self.space.remove(self.test_box, self.test_box.body)
+                self.test_box = None
             elif event.type == KEYDOWN and event.key == K_SPACE:
                 self.update_poses()
 
