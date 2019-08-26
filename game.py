@@ -25,6 +25,10 @@ LOGO_FRICTION = 0.95
 LOGO_ELASTICITY = 1.0
 LOGO_SIZE = (60, 60)
 
+COLLTYPE_MOUSE = 1
+COLLTYPE_LOGO = 2
+COLLTYPE_GOAL = 3
+
 # Taken from: https://github.com/CMU-Perceptual-Computing-Lab/openpose/blob/master/doc/output.md
 LEFT_WRIST_IDX = 7
 RIGHT_WRIST_IDX = 4
@@ -36,8 +40,10 @@ class GoalPost(object):
 
     def __init__(self, static_body, first_pos, second_pos, radius):
         self.shape = pymunk.Segment(static_body, first_pos, second_pos, radius)
-        self.shape.elasticity = 0.95
+        self.shape.elasticity = 1.0
         self.shape.friction = 0.9
+
+        self.shape.collision_type = COLLTYPE_GOAL
 
         self.goals_scored = 0
 
@@ -76,6 +82,7 @@ class Logo(pygame.sprite.Sprite):
         box = pymunk.Poly.create_box(body, rect.size, LOGO_RADIUS)
         box.elasticity = LOGO_ELASTICITY
         box.friction = LOGO_FRICTION
+        box.collision_type = COLLTYPE_GOAL
 
         return box
 
@@ -105,7 +112,7 @@ class PoseLogoSlapGame(object):
         quarter_screen_dims = (mid_point[0] / 2, mid_point[1] / 2)
         x = random.randint(mid_point[0] - quarter_screen_dims[0], mid_point[0] + quarter_screen_dims[0])
         y = random.randint(mid_point[1] - quarter_screen_dims[1], mid_point[1] + quarter_screen_dims[1])
-        self.logo = Logo((x, y), image_path)
+        self.logo = Logo(pymunk.Vec2d(x, y), image_path)
         self.space.add(self.logo.box.body, self.logo.box)
         pygame.display.set_icon(self.logo.image)
 
@@ -182,7 +189,8 @@ class PoseLogoSlapGame(object):
                     self.test_ball = self.create_ball()
             elif event.type == MOUSEMOTION:
                 if self.test_ball:
-                    self.test_ball.body.position = pygame.mouse.get_pos()
+                    pos = pygame.mouse.get_pos()
+                    self.test_ball.body.position = pymunk.Vec2d(pos[0], pos[1])
             elif event.type == MOUSEBUTTONUP:
                 if self.test_ball:
                     self.space.remove(self.test_ball, self.test_ball.body)
@@ -196,12 +204,13 @@ class PoseLogoSlapGame(object):
         :return:
         """
         mass = 100
-        radius = 25
+        radius = 50
         inertia = pymunk.moment_for_circle(mass, 0, radius, (0, 0))
         body = pymunk.Body(mass, inertia, pymunk.Body.KINEMATIC)
         body.position = pygame.mouse.get_pos()
         shape = pymunk.Circle(body, radius, (0, 0))
-        shape.elasticity = 0.95
+        shape.collision_type = COLLTYPE_MOUSE
+        shape.elasticity = 1.0
         shape.friction = 0.9
 
         self.space.add(body, shape)
