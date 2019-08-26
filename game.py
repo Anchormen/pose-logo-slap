@@ -16,6 +16,11 @@ import numpy as np
 import camera
 from pose_estimator import PoseEstimator
 
+PUSH_BODY_FRICTION = 0.9
+PUSH_BODY_ELASTICITY = 1.0
+PUSH_BODY_RADIUS = 50
+PUSH_BODY_MASS = 100
+
 GOAL_MARGIN = 5
 RELATIVE_GOAL_SIZE = 0.2
 
@@ -54,6 +59,34 @@ class GoalPost(object):
         self.goals_scored = 1
 
 
+class PushBody(object):
+    """
+    Used to push the logo, either via mouse or through pose skeletons
+    """
+
+    def __init__(self, pos):
+        mass = PUSH_BODY_MASS
+        radius = PUSH_BODY_RADIUS
+        inertia = pymunk.moment_for_circle(mass, 0, radius, (0, 0))
+
+        self.body = pymunk.Body(mass, inertia, pymunk.Body.KINEMATIC)
+        self.body.position = pos
+
+        self.shape = pymunk.Circle(self.body, radius, (0, 0))
+        self.shape.collision_type = COLLTYPE_MOUSE
+        self.shape.elasticity = PUSH_BODY_ELASTICITY
+        self.shape.friction = PUSH_BODY_FRICTION
+
+    def move(self, new_pos, dt):
+        """
+        Moves PushBody to new position and calculates new velocity
+        """
+        old_pos = self.body.position
+        new_v = (new_pos - old_pos) / dt
+        self.body.position = new_pos
+        self.body.velocity = new_v
+
+
 class Logo(pygame.sprite.Sprite):
     """
     The logo or "ball" with which to be scored
@@ -86,12 +119,6 @@ class Logo(pygame.sprite.Sprite):
 
         return box
 
-    @staticmethod
-    def coll_type_handler(arbiter, space, data):
-        """ Increases the"""
-        s1,s2 = arbiter.shapes
-        s2.unsafe_set_radius(s2.radius + 0.15)
-        return False
 
 class PoseLogoSlapGame(object):
     """
@@ -127,16 +154,14 @@ class PoseLogoSlapGame(object):
 
         static_body = self.space.static_body
         goal_length = screen_dims[1] * RELATIVE_GOAL_SIZE
-        self.left_goal = GoalPost(static_body, (GOAL_MARGIN, screen_dims[1] - GOAL_MARGIN),
-                                  (GOAL_MARGIN, screen_dims[1] - (goal_length + GOAL_MARGIN)), GOAL_MARGIN)
-        self.right_goal = GoalPost(static_body, (screen_dims[0] - GOAL_MARGIN, screen_dims[1] - GOAL_MARGIN),
-                                   (screen_dims[0] - GOAL_MARGIN, screen_dims[1] - (goal_length + GOAL_MARGIN)),
+        self.left_goal = GoalPost(static_body, (GOAL_MARGIN, (screen_dims[1] / 2 - goal_length / 2)),
+                                  (GOAL_MARGIN, (screen_dims[1] / 2 + goal_length / 2)), GOAL_MARGIN)
+        self.right_goal = GoalPost(static_body, (screen_dims[0] - GOAL_MARGIN, (screen_dims[1] / 2 - goal_length / 2)),
+                                   (screen_dims[0] - GOAL_MARGIN, (screen_dims[1] / 2 + goal_length / 2)),
                                    GOAL_MARGIN)
         self.space.add([self.left_goal.shape, self.right_goal.shape])
 
-        self.test_box = None
-        self.space.add_collision_handler(COLLTYPE_MOUSE, COLLTYPE_LOGO).pre_solve=Logo.coll_type_handler
-
+        self.test_push_body = None
 
         # Setup pose estimator
         self.pose_estimator = pose_estimator
@@ -194,40 +219,21 @@ class PoseLogoSlapGame(object):
             elif event.type == KEYDOWN and event.key == K_r:
                 self.reset_game()
             elif event.type == MOUSEBUTTONDOWN:
-                if not self.test_box:
-                    self.test_box = self.create_box()
+                if not self.test_push_body:
+                    pos = pygame.mouse.get_pos()
+                    self.test_push_body = PushBody(pymunk.Vec2d(pos[0], pos[1]))
+                    self.space.add(self.test_push_body.body, self.test_push_body.shape)
             elif event.type == MOUSEMOTION:
-                if self.test_box:
+                if self.test_push_body:
                     pos = pygame.mouse.get_pos()
                     new_pos = pymunk.Vec2d(pos[0], pos[1])
-                    old_pos = self.test_box.body.position
-                    new_v = (new_pos - old_pos) / self.dt
-                    self.test_box.body.position = new_pos
-                    self.test_box.body.velocity = new_v
+                    self.test_push_body.move(new_pos, self.dt)
             elif event.type == MOUSEBUTTONUP:
-                if self.test_box:
-                    self.space.remove(self.test_box, self.test_box.body)
-                self.test_box = None
+                if self.test_push_body:
+                    self.space.remove(self.test_push_body.shape, self.test_push_body.body)
+                self.test_push_body = None
             elif event.type == KEYDOWN and event.key == K_SPACE:
                 self.update_poses()
-
-    def create_box(self):
-        """
-        Create a ball.
-        :return:
-        """
-        mass = 100
-        radius = 50
-        inertia = pymunk.moment_for_circle(mass, 0, radius, (0, 0))
-        body = pymunk.Body(mass, inertia, pymunk.Body.KINEMATIC)
-        body.position = pygame.mouse.get_pos()
-        shape = pymunk.Circle(body, radius, (0, 0))
-        shape.collision_type = COLLTYPE_MOUSE
-        shape.elasticity = 1.0
-        shape.friction = 0.9
-
-        self.space.add(body, shape)
-        return shape
 
     def clear_screen(self):
         """
