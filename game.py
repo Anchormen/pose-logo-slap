@@ -334,7 +334,7 @@ if __name__ == '__main__':
                         help='If provided, displays in fullscreen')
     parser.add_argument("--model_path", default="/opt/openpose/models/", help="Path to the model directory")
     parser.add_argument("--image_path", default="/opt/anchormen/logo.png", help="Path to the logo")
-    parser.add_argument("--gpu", default=False, type=bool)
+    parser.add_argument("--gpu", action="store_true", type=bool)
     args = parser.parse_args()
 
     camera = camera.get_camera_streaming(args.width, args.height)
