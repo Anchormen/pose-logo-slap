@@ -21,10 +21,13 @@ ENV OPENPOSE_ROOT=/opt/openpose
 WORKDIR $OPENPOSE_ROOT
 RUN git clone https://github.com/CMU-Perceptual-Computing-Lab/openpose.git $OPENPOSE_ROOT
 
+WORKDIR $OPENPOSE_ROOT/3rdparty/caffe
+RUN git clone -b feature/work-for-openpose --single-branch https://gitlab.anchormen.nl/MarketingDS/caffe-openpose.git .
+
 #build it
 WORKDIR $OPENPOSE_ROOT/build
 RUN cmake -DBUILD_PYTHON=ON ..
-RUN make -j8
+RUN make -j16
 RUN cp $OPENPOSE_ROOT/build/caffe/lib/* /usr/lib/x86_64-linux-gnu
 
 # Some more lib linking
