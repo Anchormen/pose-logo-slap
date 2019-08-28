@@ -228,7 +228,7 @@ class PoseLogoSlapGame(object):
             self.process_events()
             self.clear_screen()
             if self.gpu_mode:
-                self.update_pose()
+                self.update_poses()
             self.logo.update()
             self.draw_objects()
 
