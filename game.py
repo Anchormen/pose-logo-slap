@@ -151,7 +151,7 @@ class PoseLogoSlapGame(object):
     Main game class
     """
 
-    def __init__(self, screen_dims, image_path, pose_estimator, gpu_mode):
+    def __init__(self, screen_dims, image_path, pose_estimator, camera, gpu_mode):
         # Physics
         self.space = pymunk.Space()
         # self.space.gravity = (0.0, 600.0)
@@ -197,6 +197,12 @@ class PoseLogoSlapGame(object):
         # Setup pose estimator
         self.pose_estimator = pose_estimator
         self.background = None
+        self.camera = camera
+        _, frame = self.camera.read()
+        self.original_frame = frame
+
+        self.right_hand = None
+        self.left_hand = None
 
         self.gpu_mode = gpu_mode
         self.running = True
@@ -226,10 +232,11 @@ class PoseLogoSlapGame(object):
                 self.space.step(self.dt)
 
             self.process_events()
-            self.clear_screen()
+            self.get_new_frame()
             if self.gpu_mode:
                 self.update_poses()
             self.logo.update()
+            self.clear_screen()
             self.draw_objects()
 
             pygame.display.flip()
@@ -288,31 +295,50 @@ class PoseLogoSlapGame(object):
         self.screen.blit(self.right_goal.counter.text, self.right_goal.counter.pos)
 
     def update_poses(self):
-        datum = self.pose_estimator.grab_pose()
+        datum = self.pose_estimator.grab_pose(self.original_frame)
+        num_poses = len(datum.poseKeypoints) if datum.poseKeypoints.ndim > 0 else 0
+        print("Number of poses detected: " + str(num_poses))
+        if num_poses == 0:
+            if self.left_hand:
+                self.space.remove(self.left_hand.shape, self.left_hand.body)
 
-        print("Number of poses detected: " + str(len(datum.poseKeypoints)))
+            if self.right_hand:
+                self.space.remove(self.right_hand.shape, self.right_hand.body)
+                 
+            return
 
         for pose in datum.poseKeypoints:
 
             right_wrist_pos = None
             if pose[RIGHT_WRIST_IDX][2] > 0:
-                right_wrist_pos = (int(pose[RIGHT_WRIST_IDX][0]), int(pose[RIGHT_WRIST_IDX][1]))
-                right_ball = self.create_box()
-                right_ball.body.position = right_wrist_pos
+                right_wrist_pos = pymunk.Vec2d(int(pose[RIGHT_WRIST_IDX][0]), int(pose[RIGHT_WRIST_IDX][1]))
+                if self.right_hand:
+                    self.right_hand.move(right_wrist_pos, self.dt)
+                else:
+                    self.right_hand = PushBody(right_wrist_pos)
+                    self.space.add(self.right_hand.body, self.right_hand.shape)
+            else:
+                # No right hand found. Removing PushObject if it exists
+                if self.right_hand:
+                    self.space.remove(self.right_hand.shape, self.right_hand.body)
 
             left_wrist_pos = None
             if pose[LEFT_WRIST_IDX][2] > 0:
-                left_wrist_pos = (int(pose[LEFT_WRIST_IDX][0]), int(pose[LEFT_WRIST_IDX][1]))
-                left_ball = self.create_box()
-                left_ball.body.position = left_wrist_pos
+                left_wrist_pos = pymunk.Vec2d(int(pose[LEFT_WRIST_IDX][0]), int(pose[LEFT_WRIST_IDX][1]))
+                if self.left_hand:
+                    self.left_hand.move(left_wrist_pos, self.dt)
+                else:
+                    self.left_hand = PushBody(left_wrist_pos)
+                    self.space.add(self.left_hand.body, self.left_hand.shape)
+            else:
+                # No left hand found. Removing PushObject if it exists
+                if self.left_hand:
+                    self.space.remove(self.left_hand.shape, self.left_hand.body)
 
             print("Right wrist: " + str(right_wrist_pos))
             print("Left wrist: " + str(left_wrist_pos))
 
-        out = datum.cvOutputData
-        out = np.swapaxes(out, 0, 1).astype(np.uint8)
-        out = np.flip(out, axis=2)
-        self.background = out
+        self.background = PoseLogoSlapGame.convert_array_to_pygame_layout(datum.cvOutputData)
 
     def reset_game(self):
         print("Resetting game, previous scores:")
@@ -321,6 +347,17 @@ class PoseLogoSlapGame(object):
 
         self.right_goal.reset()
         self.left_goal.reset()
+
+    def get_new_frame(self):
+        _, frame = self.camera.read()
+        self.original_frame = frame
+        self.background = PoseLogoSlapGame.convert_array_to_pygame_layout(frame)
+
+    @staticmethod
+    def convert_array_to_pygame_layout(img_array):
+        img_array = np.swapaxes(img_array, 0, 1).astype(np.uint8)
+        img_array = np.flip(img_array, axis=2)
+        return img_array
 
 
 if __name__ == '__main__':
@@ -338,7 +375,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     camera = camera.get_camera_streaming(args.width, args.height)
-    pose_estimator = PoseEstimator(args.model_path, camera)
-    game = PoseLogoSlapGame((args.width, args.height), args.image_path, pose_estimator, args.gpu)
+    pose_estimator = PoseEstimator(args.model_path)
+    game = PoseLogoSlapGame((args.width, args.height), args.image_path, pose_estimator, camera, args.gpu)
 
     game.run()

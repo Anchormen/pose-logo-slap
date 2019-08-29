@@ -25,7 +25,7 @@ Run the following command for starting the image build under the poselogoslap:la
 
 or for GPU:
 
-`docker run --runtime=nvidia -v /tmp/.X11-unix:/tmp/.X11-unix -v /dev/snd:/dev/snd  -e DISPLAY=$DISPLAY --device=/dev/video0:/dev/video0 -it pose-logo-slap:latest`
+`docker run --runtime=nvidia --ipc=host -v /tmp/.X11-unix:/tmp/.X11-unix -v /dev/snd:/dev/snd  -e DISPLAY=$DISPLAY --device=/dev/video0:/dev/video0 -it pose-logo-slap:latest`
 
 The following part: `/tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=$DISPLAY`, is for mapping the display from docker to the host screen.
 

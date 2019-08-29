@@ -7,15 +7,13 @@ from openpose import pyopenpose
 
 
 class PoseEstimator(object):
-    def __init__(self, model_path, camera):
+    def __init__(self, model_path):
         op = pyopenpose.WrapperPython()
         op.configure({"model_folder": model_path})
         op.start()
         self.op = op
-        self.camera = camera
 
-    def grab_pose(self):
-        _, frame = self.camera.read()
+    def grab_pose(self, frame):
         datum = pyopenpose.Datum()
         datum.cvInputData = frame
         self.op.emplaceAndPop([datum])
