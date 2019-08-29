@@ -14,6 +14,7 @@ import pymunk
 import pymunk.pygame_util
 import numpy as np
 import camera
+import cv2
 from pose_estimator import PoseEstimator
 
 PUSH_BODY_FRICTION = 0.9
@@ -109,8 +110,9 @@ class PushBody(object):
         """
         old_pos = self.body.position
         new_v = (new_pos - old_pos) / dt
+        interpolated_v = (new_v + self.body.velocity) / 2
         self.body.position = new_pos
-        self.body.velocity = new_v
+        self.body.velocity = interpolated_v
 
 
 class Logo(pygame.sprite.Sprite):
@@ -355,8 +357,9 @@ class PoseLogoSlapGame(object):
 
     def get_new_frame(self):
         _, frame = self.camera.read()
-        self.original_frame = frame
-        self.background = PoseLogoSlapGame.convert_array_to_pygame_layout(frame)
+        flipped = cv2.flip(frame, 1)
+        self.original_frame = flipped
+        self.background = PoseLogoSlapGame.convert_array_to_pygame_layout(flipped)
 
     @staticmethod
     def convert_array_to_pygame_layout(img_array):
