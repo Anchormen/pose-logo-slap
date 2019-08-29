@@ -304,7 +304,7 @@ class PoseLogoSlapGame(object):
 
             if self.right_hand:
                 self.space.remove(self.right_hand.shape, self.right_hand.body)
-                 
+
             return
 
         for pose in datum.poseKeypoints:
@@ -337,6 +337,8 @@ class PoseLogoSlapGame(object):
 
             print("Right wrist: " + str(right_wrist_pos))
             print("Left wrist: " + str(left_wrist_pos))
+            
+            break #TODO remove
 
         self.background = PoseLogoSlapGame.convert_array_to_pygame_layout(datum.cvOutputData)
 
