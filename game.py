@@ -302,44 +302,46 @@ class PoseLogoSlapGame(object):
         if num_poses == 0:
             if self.left_hand:
                 self.space.remove(self.left_hand.shape, self.left_hand.body)
+                self.left_hand = None
 
             if self.right_hand:
                 self.space.remove(self.right_hand.shape, self.right_hand.body)
+                self.right_hand = None
 
             return
 
-        # for pose in datum.poseKeypoints:
-        pose = datum.poseKeypoints[0]
-        right_wrist_pos = None
-        if pose[RIGHT_WRIST_IDX][2] > 0:
-            right_wrist_pos = pymunk.Vec2d(int(pose[RIGHT_WRIST_IDX][0]), int(pose[RIGHT_WRIST_IDX][1]))
-            if self.right_hand:
-                self.right_hand.move(right_wrist_pos, self.dt)
+        for pose in datum.poseKeypoints:
+
+            right_wrist_pos = None
+            if pose[RIGHT_WRIST_IDX][2] > 0:
+                right_wrist_pos = pymunk.Vec2d(int(pose[RIGHT_WRIST_IDX][0]), int(pose[RIGHT_WRIST_IDX][1]))
+                if self.right_hand:
+                    self.right_hand.move(right_wrist_pos, self.dt)
+                else:
+                    self.right_hand = PushBody(right_wrist_pos)
+                    self.space.add(self.right_hand.body, self.right_hand.shape)
             else:
-                self.right_hand = PushBody(right_wrist_pos)
-                self.space.add(self.right_hand.body, self.right_hand.shape)
-        else:
-            # No right hand found. Removing PushObject if it exists
-            if self.right_hand:
-                self.space.remove(self.right_hand.shape, self.right_hand.body)
+                # No right hand found. Removing PushObject if it exists
+                if self.right_hand:
+                    self.space.remove(self.right_hand.shape, self.right_hand.body)
+                    self.right_hand = None
 
-        left_wrist_pos = None
-        if pose[LEFT_WRIST_IDX][2] > 0:
-            left_wrist_pos = pymunk.Vec2d(int(pose[LEFT_WRIST_IDX][0]), int(pose[LEFT_WRIST_IDX][1]))
-            if self.left_hand:
-                self.left_hand.move(left_wrist_pos, self.dt)
+            left_wrist_pos = None
+            if pose[LEFT_WRIST_IDX][2] > 0:
+                left_wrist_pos = pymunk.Vec2d(int(pose[LEFT_WRIST_IDX][0]), int(pose[LEFT_WRIST_IDX][1]))
+                if self.left_hand:
+                    self.left_hand.move(left_wrist_pos, self.dt)
+                else:
+                    self.left_hand = PushBody(left_wrist_pos)
+                    self.space.add(self.left_hand.body, self.left_hand.shape)
             else:
-                self.left_hand = PushBody(left_wrist_pos)
-                self.space.add(self.left_hand.body, self.left_hand.shape)
-        else:
-            # No left hand found. Removing PushObject if it exists
-            if self.left_hand:
-                self.space.remove(self.left_hand.shape, self.left_hand.body)
+                # No left hand found. Removing PushObject if it exists
+                if self.left_hand:
+                    self.space.remove(self.left_hand.shape, self.left_hand.body)
+                    self.left_hand = None
 
-        print("Right wrist: " + str(right_wrist_pos))
-        print("Left wrist: " + str(left_wrist_pos))
-
-            # break #TODO remove
+            print("Right wrist: " + str(right_wrist_pos))
+            print("Left wrist: " + str(left_wrist_pos))
 
         self.background = PoseLogoSlapGame.convert_array_to_pygame_layout(datum.cvOutputData)
 
