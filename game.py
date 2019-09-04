@@ -17,6 +17,12 @@ import camera
 import cv2
 from pose_estimator import PoseEstimator
 
+MAX_DISTANCE_THRESHOLD = 10
+
+GOAL_FRICTION = 0.9
+
+GOAL_ELASTICITY = 1.0
+
 PUSH_BODY_FRICTION = 0.9
 PUSH_BODY_ELASTICITY = 1.0
 PUSH_BODY_RADIUS = 50
@@ -40,8 +46,9 @@ COLLTYPE_GOAL = 3
 # Taken from: https://github.com/CMU-Perceptual-Computing-Lab/openpose/blob/master/doc/output.md
 LEFT_WRIST_IDX = 7
 RIGHT_WRIST_IDX = 4
+NECK_IDX = 2
 
-FONT_NAME = 'Comic Sans MS'
+FONT_NAME = 'Comic Sans MS'  # Hell yeah
 FONT_SIZE = 60
 FONT_COLOR = (229, 11, 20)
 
@@ -72,8 +79,8 @@ class GoalPost(pymunk.Segment):
 
     def __init__(self, body, first_pos, second_pos, radius, counter):
         super().__init__(body, first_pos, second_pos, radius)
-        self.elasticity = 1.0
-        self.friction = 0.9
+        self.elasticity = GOAL_ELASTICITY
+        self.friction = GOAL_FRICTION
         self.collision_type = COLLTYPE_GOAL
 
         self.counter = counter
@@ -115,6 +122,73 @@ class PushBody(object):
         self.body.velocity = interpolated_v
 
 
+class Player(object):
+
+    def __init__(self, space):
+        self.space = space
+        self.right_hand = None
+        self.left_hand = None
+        self.key_points = None
+
+    def distance(self, other_key_points):
+        """
+        Compute summed distance to other key points
+        """
+        distance = math.inf
+        if other_key_points[NECK_IDX][2] > 0:
+            neck_pos = np.array(self.key_points[NECK_IDX][0:1])
+            other_neck_pos = np.array(other_key_points[NECK_IDX][0:1])
+            np.linalg.norm(neck_pos - other_neck_pos)
+
+        return distance
+
+    def update_pose(self, new_key_points, dt):
+        right_wrist_pos = None
+        if new_key_points[RIGHT_WRIST_IDX][2] > 0:
+            right_wrist_pos = pymunk.Vec2d(int(new_key_points[RIGHT_WRIST_IDX][0]),
+                                           int(new_key_points[RIGHT_WRIST_IDX][1]))
+            if self.right_hand:
+                self.right_hand.move(right_wrist_pos, dt)
+            else:
+                self.right_hand = PushBody(right_wrist_pos)
+                self.space.add(self.right_hand.body, self.right_hand.shape)
+        else:
+            # No right hand found. Removing PushObject if it exists
+            self.remove_right_hand()
+
+        left_wrist_pos = None
+        if new_key_points[LEFT_WRIST_IDX][2] > 0:
+            left_wrist_pos = pymunk.Vec2d(int(new_key_points[LEFT_WRIST_IDX][0]),
+                                          int(new_key_points[LEFT_WRIST_IDX][1]))
+            if self.left_hand:
+                self.left_hand.move(left_wrist_pos, dt)
+            else:
+                self.left_hand = PushBody(left_wrist_pos)
+                self.space.add(self.left_hand.body, self.left_hand.shape)
+        else:
+            # No left hand found. Removing PushObject if it exists
+            self.remove_left_hand()
+
+        print("Right wrist: " + str(right_wrist_pos))
+        print("Left wrist: " + str(left_wrist_pos))
+
+        self.key_points = new_key_points
+
+    def remove_left_hand(self):
+        if self.left_hand:
+            self.space.remove(self.left_hand.shape, self.left_hand.body)
+            self.left_hand = None
+
+    def remove_right_hand(self):
+        if self.right_hand:
+            self.space.remove(self.right_hand.shape, self.right_hand.body)
+            self.right_hand = None
+
+    def destroy(self):
+        self.remove_left_hand()
+        self.remove_right_hand()
+
+
 class Logo(pygame.sprite.Sprite):
     """
     The logo or "ball" with which to be scored
@@ -134,7 +208,6 @@ class Logo(pygame.sprite.Sprite):
     def create_logo_box(rect):
         """
         Create the properies for the PyMunk physics engine to use this sprite.
-        :return:
         """
         inertia = pymunk.moment_for_box(LOGO_MASS, rect.size)
         body = pymunk.Body(LOGO_MASS, inertia)
@@ -171,12 +244,10 @@ class PoseLogoSlapGame(object):
         self.draw_options = pymunk.pygame_util.DrawOptions(self.screen)
 
         # Setup logo
-        mid_point = (self.screen_dims[0] / 2, self.screen_dims[1] / 2)
-        quarter_screen_dims = (mid_point[0] / 2, mid_point[1] / 2)
-        x = random.randint(mid_point[0] - quarter_screen_dims[0], mid_point[0] + quarter_screen_dims[0])
-        y = random.randint(mid_point[1] - quarter_screen_dims[1], mid_point[1] + quarter_screen_dims[1])
-        self.logo = Logo(pymunk.Vec2d(x, y), image_path)
-        self.space.add(self.logo.box.body, self.logo.box)
+        self.image_path = image_path
+        self.logo = None
+        self.init_logo()
+
         pygame.display.set_icon(self.logo.image)
 
         self.setup_screen_bounds(screen_dims)
@@ -194,20 +265,26 @@ class PoseLogoSlapGame(object):
                                    GOAL_MARGIN, left_counter)
         self.space.add([self.left_goal, self.right_goal])
 
+        # dynamic objects
         self.test_push_body = None
+        self.players = set()
 
         # Setup pose estimator
         self.pose_estimator = pose_estimator
-        self.background = None
         self.camera = camera
-        _, frame = self.camera.read()
-        self.original_frame = frame
-
-        self.right_hand = None
-        self.left_hand = None
+        self.background = None
+        self.original_frame = None
 
         self.gpu_mode = gpu_mode
         self.running = True
+
+    def init_logo(self):
+        mid_point = (self.screen_dims[0] / 2, self.screen_dims[1] / 2)
+        quarter_screen_dims = (mid_point[0] / 2, mid_point[1] / 2)
+        x = random.randint(mid_point[0] - quarter_screen_dims[0], mid_point[0] + quarter_screen_dims[0])
+        y = random.randint(mid_point[1] - quarter_screen_dims[1], mid_point[1] + quarter_screen_dims[1])
+        self.logo = Logo(pymunk.Vec2d(x, y), self.image_path)
+        self.space.add(self.logo.box.body, self.logo.box)
 
     def setup_screen_bounds(self, screen_dims):
         # Setup bounding box around the screen, the lines start in the top left and go clockwise
@@ -302,58 +379,54 @@ class PoseLogoSlapGame(object):
         num_poses = len(datum.poseKeypoints) if datum.poseKeypoints.ndim > 0 else 0
         print("Number of poses detected: " + str(num_poses))
         if num_poses == 0:
-            if self.left_hand:
-                self.space.remove(self.left_hand.shape, self.left_hand.body)
-                self.left_hand = None
-
-            if self.right_hand:
-                self.space.remove(self.right_hand.shape, self.right_hand.body)
-                self.right_hand = None
-
+            if len(self.players) > 0:
+                self.reset_game()
             return
 
+        new_players = set()
         for pose in datum.poseKeypoints:
+            player = self.find_nearest_player(pose)
+            if not player:
+                player = Player(self.space)
 
-            right_wrist_pos = None
-            if pose[RIGHT_WRIST_IDX][2] > 0:
-                right_wrist_pos = pymunk.Vec2d(int(pose[RIGHT_WRIST_IDX][0]), int(pose[RIGHT_WRIST_IDX][1]))
-                if self.right_hand:
-                    self.right_hand.move(right_wrist_pos, self.dt)
-                else:
-                    self.right_hand = PushBody(right_wrist_pos)
-                    self.space.add(self.right_hand.body, self.right_hand.shape)
-            else:
-                # No right hand found. Removing PushObject if it exists
-                if self.right_hand:
-                    self.space.remove(self.right_hand.shape, self.right_hand.body)
-                    self.right_hand = None
+            player.update_pose(pose, self.dt)
+            new_players.add(player)
 
-            left_wrist_pos = None
-            if pose[LEFT_WRIST_IDX][2] > 0:
-                left_wrist_pos = pymunk.Vec2d(int(pose[LEFT_WRIST_IDX][0]), int(pose[LEFT_WRIST_IDX][1]))
-                if self.left_hand:
-                    self.left_hand.move(left_wrist_pos, self.dt)
-                else:
-                    self.left_hand = PushBody(left_wrist_pos)
-                    self.space.add(self.left_hand.body, self.left_hand.shape)
-            else:
-                # No left hand found. Removing PushObject if it exists
-                if self.left_hand:
-                    self.space.remove(self.left_hand.shape, self.left_hand.body)
-                    self.left_hand = None
+        old_players = self.players - new_players
+        print("Removing " + str(len(old_players)) + " players")
+        for old_player in old_players:
+            old_player.destroy()
 
-            print("Right wrist: " + str(right_wrist_pos))
-            print("Left wrist: " + str(left_wrist_pos))
+        print("Keeping/adding " + str(len(new_players)))
+        self.players = new_players
 
         self.background = PoseLogoSlapGame.convert_array_to_pygame_layout(datum.cvOutputData)
 
+    def find_nearest_player(self, pose):
+        nearest_player = None
+        closest_distance = MAX_DISTANCE_THRESHOLD
+        for player in self.players:
+            distance = player.distance(pose)
+            if distance < closest_distance:
+                nearest_player = player
+                closest_distance = distance
+
+        return nearest_player
+
     def reset_game(self):
         print("Resetting game, previous scores:")
-        print("Left player scored " + str(self.right_goal.counter.score))
-        print("Right player scored " + str(self.left_goal.counter.score))
+        print("Left team scored " + str(self.right_goal.counter.score))
+        print("Right team scored " + str(self.left_goal.counter.score))
 
         self.right_goal.reset()
         self.left_goal.reset()
+
+        for player in self.players:
+            player.destroy()
+
+        self.players = set()
+        self.space.remove(self.logo.box, self.logo.box.body)
+        self.init_logo()
 
     def get_new_frame(self):
         _, frame = self.camera.read()
