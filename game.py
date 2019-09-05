@@ -17,11 +17,10 @@ import camera
 import cv2
 from pose_estimator import PoseEstimator
 
+DT = 1.0 / 60.0
+DAMPING = 0.8
 MAX_DISTANCE_THRESHOLD = 10
 
-GOAL_FRICTION = 0.9
-
-GOAL_ELASTICITY = 1.0
 
 PUSH_BODY_FRICTION = 0.9
 PUSH_BODY_ELASTICITY = 1.0
@@ -30,6 +29,8 @@ PUSH_BODY_MASS = 100
 
 COUNTER_MARGIN = 20
 
+GOAL_FRICTION = 0.9
+GOAL_ELASTICITY = 1.0
 GOAL_MARGIN = 5
 RELATIVE_GOAL_SIZE = 0.2
 
@@ -230,8 +231,8 @@ class PoseLogoSlapGame(object):
         # Physics
         self.space = pymunk.Space()
         # self.space.gravity = (0.0, 600.0)
-        self.space.damping = 0.6
-        self.dt = 1.0 / 60.0
+        self.space.damping = DAMPING
+        self.dt = DT
         self.physics_steps_per_frame = 1
         self.space.add_collision_handler(COLLTYPE_LOGO, COLLTYPE_GOAL).separate = GoalPost.goal_scored_handler
 
