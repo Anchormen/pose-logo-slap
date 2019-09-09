@@ -32,14 +32,7 @@ The following part: `/tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=$DISPLAY`, is for 
 
 Now you should be in the container's shell.
 
-See if the graphics system works by typing
-
-`xeyes`
-
-Now you should see 2 eyes following your mouse pointer. Kill it and start the game:
+Start the game:
 
 `python3 game.py`
-
-TODO JV: It's unclear if xeyes is necessary anymore, or at all. I did specify two extra environment variables that seemed to fix it.
-
 
