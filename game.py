@@ -227,7 +227,7 @@ class PoseLogoSlapGame(object):
     Main game class
     """
 
-    def __init__(self, screen_dims, image_path, pose_estimator, camera, gpu_mode):
+    def __init__(self, screen_dims, image_path, pose_estimator, camera, gpu_mode, debug_mode):
         # Physics
         self.space = pymunk.Space()
         # self.space.gravity = (0.0, 600.0)
@@ -277,6 +277,7 @@ class PoseLogoSlapGame(object):
         self.original_frame = None
 
         self.gpu_mode = gpu_mode
+        self.debug_mode = debug_mode
         self.running = True
 
     def init_logo(self):
@@ -370,10 +371,16 @@ class PoseLogoSlapGame(object):
         Draw the objects.
         :return: None
         """
-        self.space.debug_draw(self.draw_options)
+
+        if self.debug_mode:
+            self.space.debug_draw(self.draw_options)
+            
         self.screen.blit(self.logo.image, self.logo.rect.topleft)
         self.screen.blit(self.left_goal.counter.text, self.left_goal.counter.pos)
         self.screen.blit(self.right_goal.counter.text, self.right_goal.counter.pos)
+
+        pygame.draw.line(self.screen, OBJECT_COLOR, self.right_goal.a, self.right_goal.b, GOAL_MARGIN)
+        pygame.draw.line(self.screen, OBJECT_COLOR, self.left_goal.a, self.left_goal.b, GOAL_MARGIN)
 
     def update_poses(self):
         datum = self.pose_estimator.grab_pose(self.original_frame)
@@ -454,10 +461,11 @@ if __name__ == '__main__':
     parser.add_argument("--model_path", default="/opt/openpose/models/", help="Path to the model directory")
     parser.add_argument("--image_path", default="/opt/anchormen/logo.png", help="Path to the logo")
     parser.add_argument("--gpu", action="store_true")
+    parser.add_argument("--debug", action="store_true")
     args = parser.parse_args()
 
     camera = camera.get_camera_streaming(args.width, args.height)
     pose_estimator = PoseEstimator(args.model_path)
-    game = PoseLogoSlapGame((args.width, args.height), args.image_path, pose_estimator, camera, args.gpu)
+    game = PoseLogoSlapGame((args.width, args.height), args.image_path, pose_estimator, camera, args.gpu, args.debug)
 
     game.run()
