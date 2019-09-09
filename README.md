@@ -1,5 +1,6 @@
 # Introduction
-This project is for Marketing and Personal Development purposes. 
+This project is for Marketing and Personal Development purposes. It is **not** production-grade code, if you use this for 
+anything important, you are insane.
 
 A game for slapping a logo through the screen
 
