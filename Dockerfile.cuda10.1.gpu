@@ -1,4 +1,3 @@
-# Use CUDA 10 because that's only supported by the RTX2070
 FROM nvidia/cuda:10.1-cudnn7-devel-ubuntu18.04
 
 #get deps
