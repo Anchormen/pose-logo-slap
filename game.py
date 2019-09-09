@@ -15,43 +15,9 @@ import pymunk.pygame_util
 import numpy as np
 import camera
 import cv2
+
+from constants import *
 from pose_estimator import PoseEstimator
-
-DT = 1.0 / 60.0
-DAMPING = 0.8
-MAX_DISTANCE_THRESHOLD = 10
-
-
-PUSH_BODY_FRICTION = 0.9
-PUSH_BODY_ELASTICITY = 1.0
-PUSH_BODY_RADIUS = 50
-PUSH_BODY_MASS = 100
-
-COUNTER_MARGIN = 20
-
-GOAL_FRICTION = 0.9
-GOAL_ELASTICITY = 1.0
-GOAL_MARGIN = 5
-RELATIVE_GOAL_SIZE = 0.2
-
-LOGO_RADIUS = 2
-LOGO_MASS = 5
-LOGO_FRICTION = 0.95
-LOGO_ELASTICITY = 1.0
-LOGO_SIZE = (60, 60)
-
-COLLTYPE_MOUSE = 1
-COLLTYPE_LOGO = 2
-COLLTYPE_GOAL = 3
-
-# Taken from: https://github.com/CMU-Perceptual-Computing-Lab/openpose/blob/master/doc/output.md
-LEFT_WRIST_IDX = 7
-RIGHT_WRIST_IDX = 4
-NECK_IDX = 2
-
-FONT_NAME = 'Comic Sans MS'  # Hell yeah
-FONT_SIZE = 60
-OBJECT_COLOR = (229, 11, 20)
 
 pymunk.pygame_util.positive_y_is_up = False
 pygame.font.init()
@@ -374,7 +340,7 @@ class PoseLogoSlapGame(object):
 
         if self.debug_mode:
             self.space.debug_draw(self.draw_options)
-            
+
         self.screen.blit(self.logo.image, self.logo.rect.topleft)
         self.screen.blit(self.left_goal.counter.text, self.left_goal.counter.pos)
         self.screen.blit(self.right_goal.counter.text, self.right_goal.counter.pos)
