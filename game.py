@@ -51,7 +51,7 @@ NECK_IDX = 2
 
 FONT_NAME = 'Comic Sans MS'  # Hell yeah
 FONT_SIZE = 60
-FONT_COLOR = (229, 11, 20)
+OBJECT_COLOR = (229, 11, 20)
 
 pymunk.pygame_util.positive_y_is_up = False
 pygame.font.init()
@@ -63,14 +63,14 @@ class ScoreCounter(object):
     def __init__(self, pos):
         self.pos = pos
         self.score = 0
-        self.text = ScoreCounter.font.render(str(self.score), False, FONT_COLOR)
+        self.text = ScoreCounter.font.render(str(self.score), False, OBJECT_COLOR)
 
     def reset(self):
         self.set_score(0)
 
     def set_score(self, score):
         self.score = score
-        self.text = ScoreCounter.font.render(str(self.score), False, FONT_COLOR)
+        self.text = ScoreCounter.font.render(str(self.score), False, OBJECT_COLOR)
 
     def add_goal(self):
         self.set_score(self.score + 1)
