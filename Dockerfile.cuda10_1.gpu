@@ -25,7 +25,7 @@ RUN git clone -b feature/work-for-openpose --single-branch https://gitlab.anchor
 
 #build it
 WORKDIR $OPENPOSE_ROOT/build
-RUN cmake -DBUILD_PYTHON=ON -DUSE_MKL=ON -DCMAKE_BUILD_TYPE=Release ..
+RUN cmake -DBUILD_PYTHON=ON -DCMAKE_BUILD_TYPE=Release ..
 RUN make -j16
 RUN cp $OPENPOSE_ROOT/build/caffe/lib/* /usr/lib/x86_64-linux-gnu
 
