@@ -190,7 +190,7 @@ class PoseLogoSlapGame(object):
         datum = self.pose_estimator.grab_pose(self.original_frame)
 
         num_poses = len(datum.poseKeypoints) if datum.poseKeypoints.ndim > 0 else 0
-        print("Number of poses detected: " + str(num_poses))
+        #print("Number of poses detected: " + str(num_poses))
         if num_poses == 0:
             if len(self.players) > 0:
                 self.reset_game()
@@ -206,11 +206,11 @@ class PoseLogoSlapGame(object):
             new_players.add(player)
 
         old_players = self.players - new_players
-        print("Removing " + str(len(old_players)) + " players")
+        #print("Removing " + str(len(old_players)) + " players")
         for old_player in old_players:
             old_player.destroy()
 
-        print("Keeping/adding " + str(len(new_players)))
+        #print("Keeping/adding " + str(len(new_players)))
         self.players = new_players
 
         img_array = PoseLogoSlapGame.convert_array_to_pygame_layout(datum.cvOutputData)
@@ -228,9 +228,9 @@ class PoseLogoSlapGame(object):
         return nearest_player
 
     def reset_game(self):
-        print("Resetting game, previous scores:")
-        print("Left team scored " + str(self.right_goal.counter.score))
-        print("Right team scored " + str(self.left_goal.counter.score))
+        #print("Resetting game, previous scores:")
+        #print("Left team scored " + str(self.right_goal.counter.score))
+        #print("Right team scored " + str(self.left_goal.counter.score))
 
         self.right_goal.reset()
         self.left_goal.reset()
