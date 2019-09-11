@@ -7,6 +7,7 @@ A game to slap a logo in the other player's goal using your arms/hands as detect
 import argparse
 import random
 import pygame
+import pygame.camera
 from pygame.locals import *
 from pygame.color import *
 import pymunk
@@ -72,7 +73,7 @@ class PoseLogoSlapGame(object):
         # Setup pose estimator
         self.pose_estimator = pose_estimator
         self.camera = camera
-        self.background = None
+        self.background = pygame.surface.Surface(self.screen_dims, 0, self.screen)
         self.original_frame = None
 
         self.gpu_mode = gpu_mode
@@ -161,7 +162,8 @@ class PoseLogoSlapGame(object):
         """
 
         if self.background is not None:
-            pygame.surfarray.blit_array(self.screen, self.background)
+            # pygame.surfarray.blit_array(self.screen, self.background)
+            self.screen.blit(self.background, (0, 0))
         else:
             self.screen.fill(THECOLORS["white"])
 
@@ -183,6 +185,7 @@ class PoseLogoSlapGame(object):
 
     def update_poses(self):
         datum = self.pose_estimator.grab_pose(self.original_frame)
+
         num_poses = len(datum.poseKeypoints) if datum.poseKeypoints.ndim > 0 else 0
         print("Number of poses detected: " + str(num_poses))
         if num_poses == 0:
@@ -207,7 +210,8 @@ class PoseLogoSlapGame(object):
         print("Keeping/adding " + str(len(new_players)))
         self.players = new_players
 
-        self.background = PoseLogoSlapGame.convert_array_to_pygame_layout(datum.cvOutputData)
+        img_array = PoseLogoSlapGame.convert_array_to_pygame_layout(datum.cvOutputData)
+        pygame.surfarray.blit_array(self.background, img_array)
 
     def find_nearest_player(self, pose):
         nearest_player = None
@@ -236,15 +240,27 @@ class PoseLogoSlapGame(object):
         self.init_logo()
 
     def get_new_frame(self):
-        _, frame = self.camera.read()
-        flipped = cv2.flip(frame, 1)
-        self.original_frame = flipped
-        self.background = PoseLogoSlapGame.convert_array_to_pygame_layout(flipped)
+        # _, frame = self.camera.read()
+        # flipped = cv2.flip(frame, 1)
+        # self.original_frame = flipped
+        # self.background = PoseLogoSlapGame.convert_array_to_pygame_layout(flipped)
+        if self.camera.query_image():
+            self.background = self.camera.get_image(self.background)
+            buffer = self.background.get_view("3")
+            self.original_frame = PoseLogoSlapGame.convert_array_to_opencv_layout(buffer)
+        # self.original_frame = frame
+        # self.background = frame
 
     @staticmethod
     def convert_array_to_pygame_layout(img_array):
         img_array = np.swapaxes(img_array, 0, 1).astype(np.uint8)
         img_array = np.flip(img_array, axis=2)
+        return img_array
+
+    @staticmethod
+    def convert_array_to_opencv_layout(img_array):
+        img_array = np.flip(img_array, axis=2)
+        img_array = np.swapaxes(img_array, 0, 1).astype(np.uint8)
         return img_array
 
 
@@ -263,8 +279,16 @@ if __name__ == '__main__':
     parser.add_argument("--debug", action="store_true")
     args = parser.parse_args()
 
-    camera = camera.get_camera_streaming(args.width, args.height)
+    # camera = camera.get_camera_streaming(args.width, args.height)
+    screen_dims = (args.width, args.height)
+
+    pygame.camera.init()
+    pygame.camera.list_cameras()
+    camera = pygame.camera.Camera("/dev/video0", screen_dims)
+    camera.start()
+
     pose_estimator = PoseEstimator(args.model_path)
-    game = PoseLogoSlapGame((args.width, args.height), args.image_path, pose_estimator, camera, args.gpu, args.debug)
+    game = PoseLogoSlapGame(screen_dims, args.image_path, pose_estimator, camera, args.gpu, args.debug)
 
     game.run()
+    camera.stop()
