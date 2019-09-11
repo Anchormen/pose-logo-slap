@@ -184,6 +184,9 @@ class PoseLogoSlapGame(object):
         pygame.draw.line(self.screen, OBJECT_COLOR, self.left_goal.a, self.left_goal.b, GOAL_MARGIN)
 
     def update_poses(self):
+        if not self.original_frame:
+            return
+        
         datum = self.pose_estimator.grab_pose(self.original_frame)
 
         num_poses = len(datum.poseKeypoints) if datum.poseKeypoints.ndim > 0 else 0
