@@ -95,7 +95,7 @@ class Player(object):
         if other_key_points[NECK_IDX][2] > 0:
             neck_pos = np.array(self.key_points[NECK_IDX][0:1])
             other_neck_pos = np.array(other_key_points[NECK_IDX][0:1])
-            np.linalg.norm(neck_pos - other_neck_pos)
+            distance = np.linalg.norm(neck_pos - other_neck_pos)
 
         return distance
 
