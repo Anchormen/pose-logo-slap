@@ -7,9 +7,17 @@ from openpose import pyopenpose
 
 
 class PoseEstimator(object):
-    def __init__(self, model_path):
+    def __init__(self, model_path, size):
         op = pyopenpose.WrapperPython()
-        op.configure({"model_folder": model_path})
+
+        params = dict()
+        params["model_folder"] = model_path
+        params["face"] = False
+        params["body"] = 1
+        params["render_pose"] = 1
+        params["net_resolution"] = str(size[0]) + "x" + str(size[1])
+
+        op.configure(params)
         op.start()
         self.op = op
 

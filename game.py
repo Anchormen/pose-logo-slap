@@ -280,7 +280,7 @@ if __name__ == '__main__':
     camera = pygame.camera.Camera(args.cam_path, screen_dims)
     camera.start()
 
-    pose_estimator = PoseEstimator(args.model_path)
+    pose_estimator = PoseEstimator(args.model_path, screen_dims)
     game = PoseLogoSlapGame(screen_dims, args.image_path, pose_estimator, camera, args.gpu, args.debug)
 
     game.run()
