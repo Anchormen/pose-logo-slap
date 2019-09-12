@@ -250,16 +250,10 @@ class PoseLogoSlapGame(object):
         self.init_logo()
 
     def get_new_frame(self):
-        # _, frame = self.camera.read()
-        # flipped = cv2.flip(frame, 1)
-        # self.original_frame = flipped
-        # self.background = PoseLogoSlapGame.convert_array_to_pygame_layout(flipped)
         if self.camera.query_image():
             self.background = self.camera.get_image(self.background)
-            buffer = self.background.get_view("3")
+            buffer = self.background.get_view("3").raw # use raw, otherwise the surface remains locked!
             self.original_frame = PoseLogoSlapGame.convert_array_to_opencv_layout(buffer)
-        # self.original_frame = frame
-        # self.background = frame
 
     @staticmethod
     def convert_array_to_pygame_layout(img_array):
