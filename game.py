@@ -252,8 +252,11 @@ class PoseLogoSlapGame(object):
     def get_new_frame(self):
         if self.camera.query_image():
             self.background = self.camera.get_image(self.background)
-            buffer = self.background.get_view("3").raw # use raw, otherwise the surface remains locked!
-            self.original_frame = PoseLogoSlapGame.convert_array_to_opencv_layout(buffer)
+
+            # we need to copy, otherwise the surface remains locked, hurting FPS
+            pixel_array = pygame.surfarray.array3d(self.background)
+
+            self.original_frame = PoseLogoSlapGame.convert_array_to_opencv_layout(pixel_array)
 
     @staticmethod
     def convert_array_to_pygame_layout(img_array):
