@@ -16,7 +16,7 @@ from pygame.color import *
 from pygame.locals import *
 
 from constants import *
-from game_entities import ScoreCounter, GoalPost, PushBody, Player, Logo
+from entities import ScoreCounter, GoalPost, PushBody, Player, Logo
 from pose_estimator import PoseEstimator
 
 import logging
