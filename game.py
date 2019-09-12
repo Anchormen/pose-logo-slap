@@ -270,9 +270,8 @@ class PoseLogoSlapGame(object):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='A silly game based on OpenPose')
-    parser.add_argument('--cam_path', default="/dev/video0",
-                        help='Camera path, e.g. /dev/video0 (0 = built-in, 1 = external)')
-    parser.add_argument('--fps', type=int, default=15, help='Frames per second')
+    parser.add_argument('--cam_id', default="0", type=int, help='Camera id (0 = built-in, 1 = external)')
+    parser.add_argument('--fps', type=int, default=30, help='Frames per second')
     parser.add_argument('--width', type=int, default=1280, help='Capture and display width')
     parser.add_argument('--height', type=int, default=720, help='Capture and display height')
     parser.add_argument('--fullscreen', action='store_true', dest='fullscreen',
@@ -287,7 +286,7 @@ if __name__ == '__main__':
     screen_dims = (args.width, args.height)
 
     pose_estimator = PoseEstimator(args.model_path, args.net_resolution)
-    camera = camera.get_camera_streaming(screen_dims[0], screen_dims[1])
+    camera = camera.get_camera_streaming(screen_dims[0], screen_dims[1], args.cam_id, args.fps)
     game = PoseLogoSlapGame(screen_dims, args.image_path, pose_estimator, camera, args.gpu, args.debug)
 
     game.run()
