@@ -22,6 +22,9 @@ def setup_camera_streaming(width, height, cam_id=0, fps=30):
 
 
 class FrameGrabber(threading.Thread):
+    """
+    Grabs the camera by the frame.
+    """
 
     def __init__(self, width, height, cam_id=0, fps=30):
         super().__init__()
