@@ -46,7 +46,7 @@ class PoseLogoSlapGame(object):
     Main game class
     """
 
-    def __init__(self, screen_dims, image_path, pose_estimator, camera, gpu_mode, debug_mode):
+    def __init__(self, screen_dims, image_path, pose_estimator, frame_grabber, gpu_mode, debug_mode):
         self.logger = logging.getLogger(self.__class__.__name__)
 
         # Physics
@@ -93,8 +93,8 @@ class PoseLogoSlapGame(object):
 
         # Setup pose estimator
         self.pose_estimator = pose_estimator
-        self.camera = camera
-        self.background = pygame.surface.Surface(self.screen_dims, 0, self.screen)
+        self.frame_grabber = frame_grabber
+        self.background = None
         self.pose_input_frame = None
 
         self.gpu_mode = gpu_mode
@@ -134,7 +134,7 @@ class PoseLogoSlapGame(object):
                 self.space.step(self.dt)
 
             self.process_events()
-            self.get_new_frame()
+            self.load_new_frame()
             if self.gpu_mode:
                 self.update_poses()
             self.logo.update()
@@ -208,6 +208,7 @@ class PoseLogoSlapGame(object):
             return
 
         datum = self.pose_estimator.grab_pose(self.pose_input_frame)
+        self.pose_input_frame = None
 
         num_poses = len(datum.poseKeypoints) if datum.poseKeypoints.ndim > 0 else 0
         self.logger.debug("Number of poses detected: %d", num_poses)
@@ -261,11 +262,13 @@ class PoseLogoSlapGame(object):
         self.space.remove(self.logo.box, self.logo.box.body)
         self.init_logo()
 
-    def get_new_frame(self):
-        _, frame = self.camera.read()
-        flipped = cv2.flip(frame, 1)
-        self.pose_input_frame = flipped
-        self.background = convert_array_to_pygame_layout(flipped)
+    def load_new_frame(self):
+        frame = self.frame_grabber.pop_frame()
+        if frame is None:
+            return
+
+        self.pose_input_frame = frame
+        self.background = convert_array_to_pygame_layout(frame)
 
 
 if __name__ == '__main__':
@@ -284,9 +287,11 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     screen_dims = (args.width, args.height)
-
     pose_estimator = PoseEstimator(args.model_path, args.net_resolution)
-    camera = camera.get_camera_streaming(screen_dims[0], screen_dims[1], args.cam_id, args.fps)
-    game = PoseLogoSlapGame(screen_dims, args.image_path, pose_estimator, camera, args.gpu, args.debug)
+    grabber = camera.FrameGrabber(screen_dims[0], screen_dims[1], args.cam_id, args.fps)
+    grabber.start()
 
+    game = PoseLogoSlapGame(screen_dims, args.image_path, pose_estimator, grabber, args.gpu, args.debug)
     game.run()
+
+    grabber.stop()
