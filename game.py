@@ -240,10 +240,12 @@ class PoseLogoSlapGame(object):
         closest_distance = MAX_DISTANCE_THRESHOLD
         for player in self.players:
             distance = player.distance(pose)
+            self.logger.debug("Distance: %f", distance)
             if distance < closest_distance:
                 nearest_player = player
                 closest_distance = distance
 
+        self.logger.debug("Closest distance: %f", closest_distance)
         return nearest_player
 
     def reset_game(self):
