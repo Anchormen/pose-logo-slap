@@ -6,19 +6,23 @@ A game to slap a logo in the other player's goal using your arms/hands as detect
 
 import argparse
 import random
+
+import numpy as np
 import pygame
 import pygame.camera
-from pygame.locals import *
-from pygame.color import *
 import pymunk
 import pymunk.pygame_util
-import numpy as np
-import camera
-import cv2
+from pygame.color import *
+from pygame.locals import *
 
 from constants import *
 from game_entities import ScoreCounter, GoalPost, PushBody, Player, Logo
 from pose_estimator import PoseEstimator
+
+import logging
+import logging.config
+
+logging.config.fileConfig('logging.conf')
 
 pymunk.pygame_util.positive_y_is_up = False
 
@@ -29,6 +33,8 @@ class PoseLogoSlapGame(object):
     """
 
     def __init__(self, screen_dims, image_path, pose_estimator, camera, gpu_mode, debug_mode):
+        self.logger = logging.getLogger(self.__class__.__name__)
+
         # Physics
         self.space = pymunk.Space()
         # self.space.gravity = (0.0, 600.0)
@@ -107,7 +113,7 @@ class PoseLogoSlapGame(object):
         :return: None
         """
 
-        print("Starting game loop")
+        self.logger.info("Starting game loop")
         while self.running:
             # Progress time forward
             for x in range(self.physics_steps_per_frame):
@@ -191,7 +197,7 @@ class PoseLogoSlapGame(object):
         datum = self.pose_estimator.grab_pose(self.original_frame)
 
         num_poses = len(datum.poseKeypoints) if datum.poseKeypoints.ndim > 0 else 0
-        # print("Number of poses detected: " + str(num_poses))
+        self.logger.debug("Number of poses detected: " + str(num_poses))
         if num_poses == 0:
             if len(self.players) > 0:
                 self.reset_game()
@@ -207,11 +213,11 @@ class PoseLogoSlapGame(object):
             new_players.add(player)
 
         old_players = self.players - new_players
-        # print("Removing " + str(len(old_players)) + " players")
+        self.logger.debug("Removing " + str(len(old_players)) + " players")
         for old_player in old_players:
             old_player.destroy()
 
-        # print("Keeping/adding " + str(len(new_players)))
+        self.logger.debug("Keeping/adding " + str(len(new_players)))
         self.players = new_players
 
         img_array = PoseLogoSlapGame.convert_array_to_pygame_layout(datum.cvOutputData)
@@ -229,9 +235,9 @@ class PoseLogoSlapGame(object):
         return nearest_player
 
     def reset_game(self):
-        # print("Resetting game, previous scores:")
-        # print("Left team scored " + str(self.right_goal.counter.score))
-        # print("Right team scored " + str(self.left_goal.counter.score))
+        self.logger.debug("Resetting game, previous scores:")
+        self.logger.debug("Left team scored " + str(self.right_goal.counter.score))
+        self.logger.debug("Right team scored " + str(self.left_goal.counter.score))
 
         self.right_goal.reset()
         self.left_goal.reset()

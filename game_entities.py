@@ -50,7 +50,6 @@ class GoalPost(pymunk.Segment):
     def goal_scored_handler(arbiter, space, data):
         _, goal = arbiter.shapes
         goal.counter.add_goal()
-        #print("Goal scored")
 
 
 class PushBody(object):
