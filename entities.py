@@ -100,7 +100,7 @@ class Player(object):
         return distance
 
     def update_pose(self, new_key_points, dt):
-        right_wrist_pos = None
+
         if new_key_points[RIGHT_WRIST_IDX][2] > 0:
             right_wrist_pos = pymunk.Vec2d(int(new_key_points[RIGHT_WRIST_IDX][0]),
                                            int(new_key_points[RIGHT_WRIST_IDX][1]))
@@ -113,7 +113,6 @@ class Player(object):
             # No right hand found. Removing PushObject if it exists
             self.remove_right_hand()
 
-        left_wrist_pos = None
         if new_key_points[LEFT_WRIST_IDX][2] > 0:
             left_wrist_pos = pymunk.Vec2d(int(new_key_points[LEFT_WRIST_IDX][0]),
                                           int(new_key_points[LEFT_WRIST_IDX][1]))
@@ -125,9 +124,6 @@ class Player(object):
         else:
             # No left hand found. Removing PushObject if it exists
             self.remove_left_hand()
-
-        print("Right wrist: " + str(right_wrist_pos))
-        print("Left wrist: " + str(left_wrist_pos))
 
         self.key_points = new_key_points
 
