@@ -266,7 +266,9 @@ class PoseLogoSlapGame(object):
             self.background = pygame.transform.flip(self.background, True, False)
 
             # we need to copy, otherwise the surface remains locked
-            img_array = pygame.surfarray.array3d(self.background)
+            # img_array = pygame.surfarray.array3d(self.background)
+
+            img_array = self.background.get_view("3")
             self.pose_input_frame = convert_array_to_opencv_layout(img_array)
 
 

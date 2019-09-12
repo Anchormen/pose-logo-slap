@@ -126,8 +126,8 @@ class Player(object):
             # No left hand found. Removing PushObject if it exists
             self.remove_left_hand()
 
-        #print("Right wrist: " + str(right_wrist_pos))
-        #print("Left wrist: " + str(left_wrist_pos))
+        print("Right wrist: " + str(right_wrist_pos))
+        print("Left wrist: " + str(left_wrist_pos))
 
         self.key_points = new_key_points
 
