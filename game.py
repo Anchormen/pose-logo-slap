@@ -220,8 +220,7 @@ class PoseLogoSlapGame(object):
         self.logger.debug("Keeping/adding " + str(len(new_players)))
         self.players = new_players
 
-        img_array = PoseLogoSlapGame.convert_array_to_pygame_layout(datum.cvOutputData)
-        pygame.surfarray.blit_array(self.background, img_array)
+        pygame.surfarray.blit_array(self.background, datum.cvOutputData)
 
     def find_nearest_player(self, pose):
         nearest_player = None
@@ -252,11 +251,10 @@ class PoseLogoSlapGame(object):
     def get_new_frame(self):
         if self.camera.query_image():
             self.background = self.camera.get_image(self.background)
+            self.background = pygame.transform.flip(self.background, True, False)
 
-            # we need to copy, otherwise the surface remains locked, hurting FPS
-            pixel_array = pygame.surfarray.array3d(self.background)
-
-            self.original_frame = PoseLogoSlapGame.convert_array_to_opencv_layout(pixel_array)
+            # we need to copy, otherwise the surface remains locked
+            self.original_frame = pygame.surfarray.array3d(self.background)
 
     @staticmethod
     def convert_array_to_pygame_layout(img_array):
@@ -272,7 +270,7 @@ class PoseLogoSlapGame(object):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='A live emotion recognition from webcam')
+    parser = argparse.ArgumentParser(description='A silly game based on OpenPose')
     parser.add_argument('--cam_path', default="/dev/video0",
                         help='Camera path, e.g. /dev/video0 (0 = built-in, 1 = external)')
     parser.add_argument('--fps', type=int, default=15, help='Frames per second')
