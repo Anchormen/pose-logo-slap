@@ -28,14 +28,14 @@ pymunk.pygame_util.positive_y_is_up = False
 
 
 def convert_array_to_pygame_layout(img_array):
-    img_array = np.swapaxes(img_array, 0, 1).astype(np.uint8)
-    img_array = np.flip(img_array, axis=2)
+    # img_array = np.swapaxes(img_array, 0, 1).astype(np.uint8)
+    # img_array = np.flip(img_array, axis=2)
     return img_array
 
 
 def convert_array_to_opencv_layout(img_array):
-    img_array = np.flip(img_array, axis=2)
-    img_array = np.swapaxes(img_array, 0, 1).astype(np.uint8)
+    # img_array = np.flip(img_array, axis=2)
+    # img_array = np.swapaxes(img_array, 0, 1).astype(np.uint8)
     return img_array
 
 
@@ -281,6 +281,7 @@ if __name__ == '__main__':
                         help='If provided, displays in fullscreen')
     parser.add_argument("--model_path", default="/opt/openpose/models/", help="Path to the model directory")
     parser.add_argument("--image_path", default="/opt/anchormen/logo.png", help="Path to the logo")
+    parser.add_argument("--net_resolution", default="-1x358", help="Net resolution, see openpose -> flags.hpp")
     parser.add_argument("--gpu", action="store_true")
     parser.add_argument("--debug", action="store_true")
     args = parser.parse_args()
@@ -293,7 +294,7 @@ if __name__ == '__main__':
     camera = pygame.camera.Camera(args.cam_path, screen_dims)
     camera.start()
 
-    pose_estimator = PoseEstimator(args.model_path, screen_dims)
+    pose_estimator = PoseEstimator(args.model_path, args.net_resolution)
     game = PoseLogoSlapGame(screen_dims, args.image_path, pose_estimator, camera, args.gpu, args.debug)
 
     game.run()
