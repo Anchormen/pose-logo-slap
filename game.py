@@ -22,6 +22,7 @@ from pose_estimator import PoseEstimator
 
 pymunk.pygame_util.positive_y_is_up = False
 
+
 class PoseLogoSlapGame(object):
     """
     Main game class
@@ -190,7 +191,7 @@ class PoseLogoSlapGame(object):
         datum = self.pose_estimator.grab_pose(self.original_frame)
 
         num_poses = len(datum.poseKeypoints) if datum.poseKeypoints.ndim > 0 else 0
-        #print("Number of poses detected: " + str(num_poses))
+        # print("Number of poses detected: " + str(num_poses))
         if num_poses == 0:
             if len(self.players) > 0:
                 self.reset_game()
@@ -206,11 +207,11 @@ class PoseLogoSlapGame(object):
             new_players.add(player)
 
         old_players = self.players - new_players
-        #print("Removing " + str(len(old_players)) + " players")
+        # print("Removing " + str(len(old_players)) + " players")
         for old_player in old_players:
             old_player.destroy()
 
-        #print("Keeping/adding " + str(len(new_players)))
+        # print("Keeping/adding " + str(len(new_players)))
         self.players = new_players
 
         img_array = PoseLogoSlapGame.convert_array_to_pygame_layout(datum.cvOutputData)
@@ -228,9 +229,9 @@ class PoseLogoSlapGame(object):
         return nearest_player
 
     def reset_game(self):
-        #print("Resetting game, previous scores:")
-        #print("Left team scored " + str(self.right_goal.counter.score))
-        #print("Right team scored " + str(self.left_goal.counter.score))
+        # print("Resetting game, previous scores:")
+        # print("Left team scored " + str(self.right_goal.counter.score))
+        # print("Right team scored " + str(self.left_goal.counter.score))
 
         self.right_goal.reset()
         self.left_goal.reset()
@@ -269,8 +270,8 @@ class PoseLogoSlapGame(object):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='A live emotion recognition from webcam')
-    parser.add_argument('--cam_id', default=0, type=int, choices=[0, 1, 2],
-                        help='Camera ID, 0 = built-in, 1 = external')
+    parser.add_argument('--cam_path', default="/dev/video0",
+                        help='Camera path, e.g. /dev/video0 (0 = built-in, 1 = external)')
     parser.add_argument('--fps', type=int, default=15, help='Frames per second')
     parser.add_argument('--width', type=int, default=1280, help='Capture and display width')
     parser.add_argument('--height', type=int, default=720, help='Capture and display height')
@@ -287,7 +288,7 @@ if __name__ == '__main__':
 
     pygame.camera.init()
     pygame.camera.list_cameras()
-    camera = pygame.camera.Camera("/dev/video0", screen_dims)
+    camera = pygame.camera.Camera(args.cam_path, screen_dims)
     camera.start()
 
     pose_estimator = PoseEstimator(args.model_path)
