@@ -266,9 +266,8 @@ class PoseLogoSlapGame(object):
             self.background = pygame.transform.flip(self.background, True, False)
 
             # we need to copy, otherwise the surface remains locked
-            # img_array = pygame.surfarray.array3d(self.background)
+            img_array = pygame.surfarray.array3d(self.background)
 
-            img_array = self.background.get_view("3")
             self.pose_input_frame = convert_array_to_opencv_layout(img_array)
 
 
@@ -283,7 +282,7 @@ if __name__ == '__main__':
                         help='If provided, displays in fullscreen')
     parser.add_argument("--model_path", default="/opt/openpose/models/", help="Path to the model directory")
     parser.add_argument("--image_path", default="/opt/anchormen/logo.png", help="Path to the logo")
-    parser.add_argument("--net_resolution", default="-1x358", help="Net resolution, see openpose -> flags.hpp")
+    parser.add_argument("--net_resolution", default="-1x368", help="Net resolution, see openpose -> flags.hpp")
     parser.add_argument("--gpu", action="store_true")
     parser.add_argument("--debug", action="store_true")
     args = parser.parse_args()
