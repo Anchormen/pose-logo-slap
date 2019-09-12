@@ -27,6 +27,18 @@ logging.config.fileConfig('logging.conf')
 pymunk.pygame_util.positive_y_is_up = False
 
 
+def convert_array_to_pygame_layout(img_array):
+    img_array = np.swapaxes(img_array, 0, 1).astype(np.uint8)
+    img_array = np.flip(img_array, axis=2)
+    return img_array
+
+
+def convert_array_to_opencv_layout(img_array):
+    img_array = np.flip(img_array, axis=2)
+    img_array = np.swapaxes(img_array, 0, 1).astype(np.uint8)
+    return img_array
+
+
 class PoseLogoSlapGame(object):
     """
     Main game class
@@ -81,7 +93,7 @@ class PoseLogoSlapGame(object):
         self.pose_estimator = pose_estimator
         self.camera = camera
         self.background = pygame.surface.Surface(self.screen_dims, 0, self.screen)
-        self.original_frame = None
+        self.pose_input_frame = None
 
         self.gpu_mode = gpu_mode
         self.debug_mode = debug_mode
@@ -190,10 +202,10 @@ class PoseLogoSlapGame(object):
         pygame.draw.line(self.screen, OBJECT_COLOR, self.left_goal.a, self.left_goal.b, GOAL_MARGIN)
 
     def update_poses(self):
-        if self.original_frame is None:
+        if self.pose_input_frame is None:
             return
 
-        datum = self.pose_estimator.grab_pose(self.original_frame)
+        datum = self.pose_estimator.grab_pose(self.pose_input_frame)
 
         num_poses = len(datum.poseKeypoints) if datum.poseKeypoints.ndim > 0 else 0
         self.logger.debug("Number of poses detected: %d", num_poses)
@@ -219,7 +231,8 @@ class PoseLogoSlapGame(object):
         self.logger.debug("Keeping/adding " + str(len(new_players)))
         self.players = new_players
 
-        pygame.surfarray.blit_array(self.background, datum.cvOutputData)
+        output_frame = convert_array_to_pygame_layout(datum.cvOutputData)
+        pygame.surfarray.blit_array(self.background, output_frame)
 
     def find_nearest_player(self, pose):
         nearest_player = None
@@ -250,11 +263,11 @@ class PoseLogoSlapGame(object):
     def get_new_frame(self):
         if self.camera.query_image():
             self.background = self.camera.get_image(self.background)
-
             self.background = pygame.transform.flip(self.background, True, False)
 
             # we need to copy, otherwise the surface remains locked
-            self.original_frame = pygame.surfarray.array3d(self.background)
+            img_array = pygame.surfarray.array3d(self.background)
+            self.pose_input_frame = convert_array_to_opencv_layout(img_array)
 
 
 if __name__ == '__main__':
