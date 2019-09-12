@@ -169,7 +169,6 @@ class PoseLogoSlapGame(object):
         """
 
         if self.background is not None:
-            # pygame.surfarray.blit_array(self.screen, self.background)
             self.screen.blit(self.background, (0, 0))
         else:
             self.screen.fill(THECOLORS["white"])
@@ -197,7 +196,7 @@ class PoseLogoSlapGame(object):
         datum = self.pose_estimator.grab_pose(self.original_frame)
 
         num_poses = len(datum.poseKeypoints) if datum.poseKeypoints.ndim > 0 else 0
-        self.logger.debug("Number of poses detected: " + str(num_poses))
+        self.logger.debug("Number of poses detected: %d", num_poses)
         if num_poses == 0:
             if len(self.players) > 0:
                 self.reset_game()
@@ -251,22 +250,11 @@ class PoseLogoSlapGame(object):
     def get_new_frame(self):
         if self.camera.query_image():
             self.background = self.camera.get_image(self.background)
+
             self.background = pygame.transform.flip(self.background, True, False)
 
             # we need to copy, otherwise the surface remains locked
             self.original_frame = pygame.surfarray.array3d(self.background)
-
-    @staticmethod
-    def convert_array_to_pygame_layout(img_array):
-        img_array = np.swapaxes(img_array, 0, 1).astype(np.uint8)
-        img_array = np.flip(img_array, axis=2)
-        return img_array
-
-    @staticmethod
-    def convert_array_to_opencv_layout(img_array):
-        img_array = np.flip(img_array, axis=2)
-        img_array = np.swapaxes(img_array, 0, 1).astype(np.uint8)
-        return img_array
 
 
 if __name__ == '__main__':
