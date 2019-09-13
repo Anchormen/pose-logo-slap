@@ -92,6 +92,7 @@ class PoseLogoSlapGame(object):
         self.gpu_mode = gpu_mode
         self.debug_mode = debug_mode
         self.running = True
+        self.fullscreen = False
 
     def init_logo(self):
         mid_point = (self.screen_dims[0] / 2, self.screen_dims[1] / 2)
@@ -153,6 +154,13 @@ class PoseLogoSlapGame(object):
                 self.reset_game()
             elif event.type == KEYDOWN and event.key == K_d:
                 self.debug_mode = not self.debug_mode
+            elif event.type == KEYDOWN and event.key == K_f:
+                if self.fullscreen:
+                    pygame.display.set_mode(self.screen_dims)
+                    self.fullscreen = False
+                else:
+                    pygame.display.set_mode(self.screen_dims, flags=FULLSCREEN)
+                    self.fullscreen = True
             elif event.type == MOUSEBUTTONDOWN:
                 if not self.test_push_body:
                     pos = pygame.mouse.get_pos()
