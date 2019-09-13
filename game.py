@@ -151,6 +151,8 @@ class PoseLogoSlapGame(object):
                 self.running = False
             elif event.type == KEYDOWN and event.key == K_r:
                 self.reset_game()
+            elif event.type == KEYDOWN and event.key == K_d:
+                self.debug_mode = not self.debug_mode
             elif event.type == MOUSEBUTTONDOWN:
                 if not self.test_push_body:
                     pos = pygame.mouse.get_pos()
