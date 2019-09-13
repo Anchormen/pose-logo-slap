@@ -190,7 +190,6 @@ class PoseLogoSlapGame(object):
 
         if self.output_frame is not None:
             pygame.surfarray.blit_array(self.screen, self.output_frame)
-            self.output_frame = None
         else:
             self.screen.fill(THECOLORS["white"])
 
