@@ -86,7 +86,7 @@ class PoseLogoSlapGame(object):
         # Setup pose estimator
         self.pose_estimator = pose_estimator
         self.frame_grabber = frame_grabber
-        self.background = None
+        self.output_frame = None
         self.pose_input_frame = None
 
         self.gpu_mode = gpu_mode
@@ -133,8 +133,8 @@ class PoseLogoSlapGame(object):
 
             self.clear_screen()
             self.draw_objects()
-
             pygame.display.flip()
+
             # Delay fixed time between frames
             self.clock.tick(50)
             pygame.display.set_caption("fps: " + str(self.clock.get_fps()))
@@ -176,8 +176,12 @@ class PoseLogoSlapGame(object):
         :return: None
         """
 
-        if self.background is not None:
-            pygame.surfarray.blit_array(self.screen, self.background)
+        if self.output_frame is not None:
+            pygame.surfarray.blit_array(self.screen, self.output_frame)
+            self.output_frame = None
+        elif self.pose_input_frame is not None:
+            background = convert_array_to_pygame_layout(self.pose_input_frame)
+            pygame.surfarray.blit_array(self.screen, background)
         else:
             self.screen.fill(THECOLORS["white"])
 
@@ -228,7 +232,7 @@ class PoseLogoSlapGame(object):
         self.logger.debug("Keeping/adding " + str(len(new_players)))
         self.players = new_players
 
-        self.background = convert_array_to_pygame_layout(datum.cvOutputData)
+        self.output_frame = convert_array_to_pygame_layout(datum.cvOutputData)
 
     def find_nearest_player(self, pose):
         nearest_player = None
@@ -262,7 +266,6 @@ class PoseLogoSlapGame(object):
             return
 
         self.pose_input_frame = frame
-        self.background = convert_array_to_pygame_layout(frame)
 
 
 if __name__ == '__main__':
