@@ -101,31 +101,46 @@ class Player(object):
 
     def update_pose(self, new_key_points, dt):
 
-        if new_key_points[RIGHT_WRIST_IDX][2] > 0:
-            right_wrist_pos = pymunk.Vec2d(int(new_key_points[RIGHT_WRIST_IDX][0]),
-                                           int(new_key_points[RIGHT_WRIST_IDX][1]))
+        right_hand_pos = Player.extrapolate_hand_position(new_key_points, RIGHT_WRIST_IDX, RIGHT_ELBOW_IDX)
+        if right_hand_pos is not None:
+
             if self.right_hand:
-                self.right_hand.move(right_wrist_pos, dt)
+                self.right_hand.move(right_hand_pos, dt)
             else:
-                self.right_hand = PushBody(right_wrist_pos)
+                self.right_hand = PushBody(right_hand_pos)
                 self.space.add(self.right_hand.body, self.right_hand.shape)
         else:
             # No right hand found. Removing PushObject if it exists
             self.remove_right_hand()
 
-        if new_key_points[LEFT_WRIST_IDX][2] > 0:
-            left_wrist_pos = pymunk.Vec2d(int(new_key_points[LEFT_WRIST_IDX][0]),
-                                          int(new_key_points[LEFT_WRIST_IDX][1]))
+        left_hand_pos = Player.extrapolate_hand_position(new_key_points, LEFT_WRIST_IDX, LEFT_ELBOW_IDX)
+        if left_hand_pos is not None:
             if self.left_hand:
-                self.left_hand.move(left_wrist_pos, dt)
+                self.left_hand.move(left_hand_pos, dt)
             else:
-                self.left_hand = PushBody(left_wrist_pos)
+                self.left_hand = PushBody(left_hand_pos)
                 self.space.add(self.left_hand.body, self.left_hand.shape)
         else:
             # No left hand found. Removing PushObject if it exists
             self.remove_left_hand()
 
         self.key_points = new_key_points
+
+    @staticmethod
+    def extrapolate_hand_position(key_points, wrist_id, elbow_id):
+        if key_points[wrist_id][2] <= 0 or key_points[elbow_id][2] <= 0:
+            return None
+
+        wrist_pos = pymunk.Vec2d(int(key_points[wrist_id][0]), int(key_points[wrist_id][1]))
+        elbow_pos = pymunk.Vec2d(int(key_points[elbow_id][0]), int(key_points[elbow_id][1]))
+
+        forearm_vec = wrist_pos - elbow_pos  # went with vec instead of pos, because it's a direction
+
+        # the 0.5 is to make sure it's the middle of the hand
+        hand_vec = wrist_pos + (HAND_FOREARM_RATIO * forearm_vec) * 0.5
+        hand_pos = hand_vec + wrist_pos
+
+        return hand_pos
 
     def remove_left_hand(self):
         if self.left_hand:

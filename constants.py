@@ -31,8 +31,13 @@ COLLTYPE_GOAL = 3
 
 # Taken from: https://github.com/CMU-Perceptual-Computing-Lab/openpose/blob/master/doc/output.md
 LEFT_WRIST_IDX = 7
+LEFT_ELBOW_IDX = 6
 RIGHT_WRIST_IDX = 4
+RIGHT_ELBOW_IDX = 3
 NECK_IDX = 2
+
+# Lol, this is actually the golden ratio, look it up
+HAND_FOREARM_RATIO = (1 + 5 ** 0.5) / 2
 
 FONT_NAME = 'Comic Sans MS'  # Hell yeah
 FONT_SIZE = 60
