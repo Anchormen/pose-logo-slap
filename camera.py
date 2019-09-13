@@ -3,10 +3,11 @@
 @author: Jeroen Vlek <j.vlek@anchormen.nl>
 """
 
-import cv2
-import threading
-import queue
 import logging
+import queue
+import threading
+
+import cv2
 
 
 def setup_camera_streaming(width, height, cam_id=0, fps=30):

@@ -5,10 +5,11 @@ A game to slap a logo in the other player's goal using your arms/hands as detect
 """
 
 import argparse
+import logging
+import logging.config
 import random
 
 import numpy as np
-import cv2
 import pygame
 import pygame.camera
 import pymunk
@@ -16,13 +17,10 @@ import pymunk.pygame_util
 from pygame.color import *
 from pygame.locals import *
 
+import camera
 from constants import *
 from entities import ScoreCounter, GoalPost, PushBody, Player, Logo
 from pose_estimator import PoseEstimator
-import camera
-
-import logging
-import logging.config
 
 logging.config.fileConfig('logging.conf')
 
@@ -32,12 +30,6 @@ pymunk.pygame_util.positive_y_is_up = False
 def convert_array_to_pygame_layout(img_array):
     img_array = np.swapaxes(img_array, 0, 1).astype(np.uint8)
     img_array = np.flip(img_array, axis=2)
-    return img_array
-
-
-def convert_array_to_opencv_layout(img_array):
-    # img_array = np.flip(img_array, axis=2)
-    # img_array = np.swapaxes(img_array, 0, 1).astype(np.uint8)
     return img_array
 
 
