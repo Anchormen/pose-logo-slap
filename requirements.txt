@@ -1,0 +1,6 @@
+setuptools
+wheel
+pymunk
+pygame
+numpy
+opencv-python

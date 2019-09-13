@@ -1,0 +1,42 @@
+# R
+*.Rhistory
+*.RData
+*.Ruserdata
+*.Rproj
+.Rproj.user
+
+# tex
+*.log
+*.tuc
+*.aux
+*.nav
+*.out
+*.snm
+*.toc
+*.vimout
+*.vrb
+
+# Python
+.ipynb_checkpoints/
+__pycache__
+.pyc
+.pyx
+venv/
+.idea/
+
+# Vagrant
+.vagrant/*
+.vagrant
+
+# Mac OS
+.DS_Store
+
+# Temporary and lock files
+**/temp/*
+temp.*
+*~
+
+# Other
+.pem
+logs/
+

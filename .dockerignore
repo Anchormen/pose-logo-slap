@@ -1,0 +1,11 @@
+.git
+data
+model/oldies
+model/tb_logs
+model/mmod_human_face_detector.dat.bz2
+notebooks
+tb_logs
+train
+class_weights.h5
+my_model_weights.h5
+without_class_weights.h5
