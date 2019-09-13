@@ -184,12 +184,13 @@ class PoseLogoSlapGame(object):
         :return: None
         """
 
+        if self.pose_input_frame is not None:
+            # Input frame has not been processed yet
+            self.output_frame = convert_array_to_pygame_layout(self.pose_input_frame)
+
         if self.output_frame is not None:
             pygame.surfarray.blit_array(self.screen, self.output_frame)
             self.output_frame = None
-        elif self.pose_input_frame is not None:
-            background = convert_array_to_pygame_layout(self.pose_input_frame)
-            pygame.surfarray.blit_array(self.screen, background)
         else:
             self.screen.fill(THECOLORS["white"])
 
