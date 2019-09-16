@@ -82,23 +82,50 @@ class PushBody(object):
 class PlayerArm(pygame.sprite.Sprite):
 
     def __init__(self, hand_pos, elbow_pos):
-        self.body = pymunk.Body(HAND_BODY_MASS)
+        rect = PlayerArm.create_arm_box(hand_pos, elbow_pos)
+        inertia = pymunk.moment_for_box(LOGO_MASS, rect.size)
+        self.body = pymunk.Body(HAND_BODY_MASS, inertia)
+        self.body.position = rect.center
 
-        self.shape = pymunk.Segment(self.body, hand_pos, elbow_pos, HAND_BODY_THICKNESS)
+        angle = PlayerArm.compute_angle(hand_pos, elbow_pos)
+        self.body.angle = angle
+
+        self.shape = pymunk.Poly(self.body, hand_pos, elbow_pos, HAND_BODY_THICKNESS)
         self.shape.elasticity = HAND_BODY_ELASTICITY
         self.shape.friction = HAND_BODY_FRICTION
         self.shape.collision_type = COLLTYPE_HAND
 
     def move(self, hand_pos, elbow_pos, dt):
+        rect = PlayerArm.create_arm_box(hand_pos, elbow_pos)
+
         old_pos = self.body.position
-
-        self.shape.unsafe_set_endpoints(hand_pos, elbow_pos)
-
-        new_pos = self.body.position
+        new_pos = rect.center
+        self.body.position = new_pos
 
         new_v = (new_pos - old_pos) / dt
         interpolated_v = (new_v + self.body.velocity) / 2  # some smoothing on the velocity
         self.body.velocity = interpolated_v
+
+        inertia = pymunk.moment_for_box(LOGO_MASS, rect.size)
+        self.body.moment = inertia
+
+        angle = PlayerArm.compute_angle(hand_pos, elbow_pos)
+        self.body.angle = angle
+
+    @staticmethod
+    def create_arm_rect(hand_pos, elbow_pos):
+        left = min(hand_pos[0], elbow_pos[0])
+        top = max(hand_pos[1], elbow_pos[1])
+        width = HAND_BODY_THICKNESS
+        height = np.linalg.norm(hand_pos - elbow_pos)
+
+        return pygame.Rect(left, top, width, height)
+
+    @staticmethod
+    def compute_angle(hand_pos, elbow_pos):
+        arm_vec = hand_pos - elbow_pos
+        angle = math.acos(np.dot(arm_vec, np.array(0, 1)) / np.linalg.norm)
+        return angle
 
 
 class Player(object):
