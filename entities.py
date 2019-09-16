@@ -142,7 +142,7 @@ class Player(object):
             if self.left_arm:
                 self.left_arm.move(left_hand_pos, left_elbow_pos, dt)
             else:
-                self.left_arm = PlayerArm(left_hand_pos, left_elbow_pos, dt)
+                self.left_arm = PlayerArm(left_hand_pos, left_elbow_pos)
                 self.space.add(self.left_arm.body, self.left_arm.shape)
         else:
             self.remove_left_arm()
