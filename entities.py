@@ -85,7 +85,7 @@ class PlayerArm(pygame.sprite.Sprite):
         rect = PlayerArm.create_arm_rect(hand_pos, elbow_pos)
         inertia = pymunk.moment_for_box(LOGO_MASS, rect.size)
         self.body = pymunk.Body(ARM_MASS, inertia)
-        self.body.position = rect.bottomleft
+        self.body.position = rect.center
 
         angle = PlayerArm.compute_angle(hand_pos, elbow_pos)
         self.body.angle = angle
@@ -98,8 +98,11 @@ class PlayerArm(pygame.sprite.Sprite):
     def move(self, hand_pos, elbow_pos, dt):
         rect = PlayerArm.create_arm_rect(hand_pos, elbow_pos)
 
+        angle = PlayerArm.compute_angle(hand_pos, elbow_pos)
+        self.body.angle = angle
+
         old_pos = self.body.position
-        new_pos = rect.bottomleft
+        new_pos = rect.center
         self.body.position = new_pos
 
         new_v = (new_pos - old_pos) / dt
@@ -109,8 +112,6 @@ class PlayerArm(pygame.sprite.Sprite):
         inertia = pymunk.moment_for_box(LOGO_MASS, rect.size)
         self.body.moment = inertia
 
-        angle = PlayerArm.compute_angle(hand_pos, elbow_pos)
-        self.body.angle = angle
 
     @staticmethod
     def create_arm_rect(hand_pos, elbow_pos):
