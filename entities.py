@@ -189,12 +189,6 @@ class Player(object):
         hand_vec = forearm_vec + 0.5 * HAND_FOREARM_RATIO * forearm_vec
         hand_pos = elbow_pos + hand_vec
 
-        print("wrist_pos" + str(wrist_pos))
-        print("elbow_pos" + str(elbow_pos))
-        print("forearm_vec" + str(forearm_vec))
-        print("hand_vec" + str(hand_vec))
-        print("hand_pos" + str(hand_pos))
-
         return hand_pos, elbow_pos
 
     def remove_left_arm(self):
