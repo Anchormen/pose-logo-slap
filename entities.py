@@ -137,7 +137,7 @@ class Player(object):
         forearm_vec = wrist_pos - elbow_pos  # went with vec instead of pos, because it's a direction
 
         # the 0.5 is to make sure it's the middle of the hand
-        hand_vec = forearm_vec + 0.5 * HAND_FOREARM_RATIO * forearm_vec
+        hand_vec = forearm_vec + 0.25 * HAND_FOREARM_RATIO * forearm_vec
         hand_pos = elbow_pos + hand_vec
 
         return hand_pos
