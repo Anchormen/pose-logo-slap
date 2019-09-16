@@ -90,7 +90,7 @@ class PlayerArm(pygame.sprite.Sprite):
         angle = PlayerArm.compute_angle(hand_pos, elbow_pos)
         self.body.angle = angle
 
-        self.shape = pymunk.Poly(self.body, hand_pos, elbow_pos, ARM_THICKNESS)
+        self.shape = pymunk.Poly.create_box(self.body, rect.size, ARM_THICKNESS)
         self.shape.elasticity = ARM_ELASTICITY
         self.shape.friction = ARM_FRICTION
         self.shape.collision_type = COLLTYPE_HAND
