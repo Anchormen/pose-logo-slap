@@ -117,16 +117,14 @@ class PlayerArm(pygame.sprite.Sprite):
         left = min(hand_pos[0], elbow_pos[0])
         top = max(hand_pos[1], elbow_pos[1])
         width = ARM_THICKNESS
-        arm_vec = hand_pos - elbow_pos
-        height = np.linalg.norm(np.array(arm_vec[0], arm_vec[1]))
+        height = np.linalg.norm(hand_pos - elbow_pos)
 
         return pygame.Rect(left, top, width, height)
 
     @staticmethod
     def compute_angle(hand_pos, elbow_pos):
         arm_vec = hand_pos - elbow_pos
-        arm_vec = np.array(arm_vec[0], arm_vec[1])
-        angle = math.acos(np.dot(arm_vec, np.array(0, 1)) / np.linalg.norm)
+        angle = math.acos(np.dot(arm_vec, np.array([0, 1])) / np.linalg.norm)
         return angle
 
 
