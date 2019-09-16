@@ -115,7 +115,7 @@ class PlayerArm(pygame.sprite.Sprite):
     @staticmethod
     def create_arm_rect(hand_pos, elbow_pos):
         left = min(hand_pos[0], elbow_pos[0])
-        top = max(hand_pos[1], elbow_pos[1])
+        top = min(hand_pos[1], elbow_pos[1])
         width = ARM_THICKNESS
         height = np.linalg.norm(hand_pos - elbow_pos)
 
