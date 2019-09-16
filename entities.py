@@ -125,7 +125,7 @@ class PlayerArm(pygame.sprite.Sprite):
     @staticmethod
     def compute_angle(hand_pos, elbow_pos):
         arm_vec = hand_pos - elbow_pos
-        zero_angle_vec = pymunk.Vec2(0, 1)
+        zero_angle_vec = pymunk.Vec2d(0, 1)
         return arm_vec.get_angle_between(zero_angle_vec)
 
 
