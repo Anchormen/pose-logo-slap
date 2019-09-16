@@ -79,12 +79,35 @@ class PushBody(object):
         self.body.velocity = interpolated_v
 
 
+class PlayerArm(pygame.sprite.Sprite):
+
+    def __init__(self, hand_pos, elbow_pos):
+        self.body = pymunk.Body(HAND_BODY_MASS)
+
+        self.shape = pymunk.Segment(self.body, hand_pos, elbow_pos, HAND_BODY_THICKNESS)
+        self.shape.elasticity = HAND_BODY_ELASTICITY
+        self.shape.friction = HAND_BODY_FRICTION
+        self.shape.collision_type = COLLTYPE_HAND
+
+    def move(self, hand_pos, elbow_pos, dt):
+        old_pos = self.body.position
+
+        self.shape.a = hand_pos
+        self.shape.b = elbow_pos
+
+        new_pos = self.body.position
+
+        new_v = (new_pos - old_pos) / dt
+        interpolated_v = (new_v + self.body.velocity) / 2  # some smoothing on the velocity
+        self.body.velocity = interpolated_v
+
+
 class Player(object):
 
     def __init__(self, space):
         self.space = space
-        self.right_hand = None
-        self.left_hand = None
+        self.right_arm = None
+        self.left_arm = None
         self.key_points = None
 
     def distance(self, other_key_points):
@@ -101,35 +124,35 @@ class Player(object):
 
     def update_pose(self, new_key_points, dt):
 
-        right_hand_pos = Player.extrapolate_hand_position(new_key_points, RIGHT_WRIST_IDX, RIGHT_ELBOW_IDX)
-        if right_hand_pos is not None:
+        right_hand_pos, right_elbow_pos = Player.extrapolate_hand_position(new_key_points, RIGHT_WRIST_IDX,
+                                                                           RIGHT_ELBOW_IDX)
+        if right_elbow_pos is not None:
 
-            if self.right_hand:
-                self.right_hand.move(right_hand_pos, dt)
+            if self.right_arm:
+                self.right_arm.move(right_hand_pos, right_elbow_pos, dt)
             else:
-                self.right_hand = PushBody(right_hand_pos)
-                self.space.add(self.right_hand.body, self.right_hand.shape)
+                self.right_arm = PlayerArm(right_hand_pos, right_elbow_pos)
+                self.space.add(self.right_arm.body, self.right_arm.shape)
         else:
-            # No right hand found. Removing PushObject if it exists
-            self.remove_right_hand()
+            self.remove_right_arm()
 
-        left_hand_pos = Player.extrapolate_hand_position(new_key_points, LEFT_WRIST_IDX, LEFT_ELBOW_IDX)
+        left_hand_pos, left_elbow_pos = Player.extrapolate_hand_position(new_key_points, LEFT_WRIST_IDX,
+                                                                           LEFT_ELBOW_IDX)
         if left_hand_pos is not None:
-            if self.left_hand:
-                self.left_hand.move(left_hand_pos, dt)
+            if self.left_arm:
+                self.left_arm.move(left_hand_pos, left_elbow_pos, dt)
             else:
-                self.left_hand = PushBody(left_hand_pos)
-                self.space.add(self.left_hand.body, self.left_hand.shape)
+                self.left_arm = PlayerArm(left_hand_pos, left_elbow_pos, dt)
+                self.space.add(self.left_arm.body, self.left_arm.shape)
         else:
-            # No left hand found. Removing PushObject if it exists
-            self.remove_left_hand()
+            self.remove_left_arm()
 
         self.key_points = new_key_points
 
     @staticmethod
     def extrapolate_hand_position(key_points, wrist_id, elbow_id):
         if key_points[wrist_id][2] <= 0 or key_points[elbow_id][2] <= 0:
-            return None
+            return None, None
 
         wrist_pos = pymunk.Vec2d(int(key_points[wrist_id][0]), int(key_points[wrist_id][1]))
         elbow_pos = pymunk.Vec2d(int(key_points[elbow_id][0]), int(key_points[elbow_id][1]))
@@ -140,21 +163,21 @@ class Player(object):
         hand_vec = forearm_vec + 0.5 * HAND_FOREARM_RATIO * forearm_vec
         hand_pos = elbow_pos + hand_vec
 
-        return hand_pos
+        return hand_pos, elbow_pos
 
-    def remove_left_hand(self):
-        if self.left_hand:
-            self.space.remove(self.left_hand.shape, self.left_hand.body)
-            self.left_hand = None
+    def remove_left_arm(self):
+        if self.left_arm:
+            self.space.remove(self.left_arm.shape, self.left_arm.body)
+            self.left_arm = None
 
-    def remove_right_hand(self):
-        if self.right_hand:
-            self.space.remove(self.right_hand.shape, self.right_hand.body)
-            self.right_hand = None
+    def remove_right_arm(self):
+        if self.right_arm:
+            self.space.remove(self.right_arm.shape, self.right_arm.body)
+            self.right_arm = None
 
     def destroy(self):
-        self.remove_left_hand()
-        self.remove_right_hand()
+        self.remove_left_arm()
+        self.remove_right_arm()
 
 
 class Logo(pygame.sprite.Sprite):
