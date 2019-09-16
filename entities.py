@@ -136,7 +136,7 @@ class Player(object):
             self.remove_right_arm()
 
         left_hand_pos, left_elbow_pos = Player.extrapolate_hand_position(new_key_points, LEFT_WRIST_IDX,
-                                                                           LEFT_ELBOW_IDX)
+                                                                         LEFT_ELBOW_IDX)
         if left_hand_pos is not None:
             if self.left_arm:
                 self.left_arm.move(left_hand_pos, left_elbow_pos, dt)
@@ -161,6 +161,12 @@ class Player(object):
         # the 0.5 is to make sure it's the middle of the hand
         hand_vec = forearm_vec + 0.5 * HAND_FOREARM_RATIO * forearm_vec
         hand_pos = elbow_pos + hand_vec
+
+        print("wrist_pos" + str(wrist_pos))
+        print("elbow_pos" + str(elbow_pos))
+        print("forearm_vec" + str(forearm_vec))
+        print("hand_vec" + str(hand_vec))
+        print("hand_pos" + str(hand_pos))
 
         return hand_pos, elbow_pos
 
