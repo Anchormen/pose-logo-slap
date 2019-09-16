@@ -86,7 +86,7 @@ class PlayerArm(pygame.sprite.Sprite):
         inertia = pymunk.moment_for_box(LOGO_MASS, rect.size)
         self.body = pymunk.Body(ARM_MASS, inertia)
         self.body.position = rect.center
-        cog = self.body.world_to_local((rect.bottomleft + rect.bottomright) / 2)
+        cog = self.body.world_to_local((pymunk.Vec2d(rect.bottomleft) + pymunk.Vec2d(rect.bottomright)) / 2)
         self.body.center_of_gravity = cog
 
         angle = PlayerArm.compute_angle(hand_pos, elbow_pos)
@@ -103,7 +103,7 @@ class PlayerArm(pygame.sprite.Sprite):
         old_pos = self.body.position
         new_pos = rect.center
         self.body.position = new_pos
-        cog = self.body.world_to_local((rect.bottomleft + rect.bottomright) / 2)
+        cog = self.body.world_to_local((pymunk.Vec2d(rect.bottomleft) + pymunk.Vec2d(rect.bottomright)) / 2)
         self.body.center_of_gravity = cog
 
         new_v = (new_pos - old_pos) / dt
