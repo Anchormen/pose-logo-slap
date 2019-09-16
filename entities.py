@@ -92,8 +92,7 @@ class PlayerArm(pygame.sprite.Sprite):
     def move(self, hand_pos, elbow_pos, dt):
         old_pos = self.body.position
 
-        self.shape.a = hand_pos
-        self.shape.b = elbow_pos
+        self.shape.unsafe_set_endpoints(hand_pos, elbow_pos)
 
         new_pos = self.body.position
 
