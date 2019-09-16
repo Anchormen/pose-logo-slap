@@ -85,7 +85,9 @@ class PlayerArm(pygame.sprite.Sprite):
         rect = PlayerArm.create_arm_rect(hand_pos, elbow_pos)
         inertia = pymunk.moment_for_box(LOGO_MASS, rect.size)
         self.body = pymunk.Body(ARM_MASS, inertia)
-        self.body.position = rect.bottomleft
+        self.body.position = rect.center
+        cog = self.body.world_to_local(rect.bottom)
+        self.body.center_of_gravity = cog
 
         angle = PlayerArm.compute_angle(hand_pos, elbow_pos)
         self.body.angle = angle
@@ -99,8 +101,10 @@ class PlayerArm(pygame.sprite.Sprite):
         rect = PlayerArm.create_arm_rect(hand_pos, elbow_pos)
 
         old_pos = self.body.position
-        new_pos = rect.bottomleft
+        new_pos = rect.center
         self.body.position = new_pos
+        cog = self.body.world_to_local(rect.bottom)
+        self.body.center_of_gravity = cog
 
         new_v = (new_pos - old_pos) / dt
         interpolated_v = (new_v + self.body.velocity) / 2  # some smoothing on the velocity
