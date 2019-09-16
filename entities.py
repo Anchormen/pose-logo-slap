@@ -84,15 +84,15 @@ class PlayerArm(pygame.sprite.Sprite):
     def __init__(self, hand_pos, elbow_pos):
         rect = PlayerArm.create_arm_rect(hand_pos, elbow_pos)
         inertia = pymunk.moment_for_box(LOGO_MASS, rect.size)
-        self.body = pymunk.Body(HAND_BODY_MASS, inertia)
+        self.body = pymunk.Body(ARM_MASS, inertia)
         self.body.position = rect.center
 
         angle = PlayerArm.compute_angle(hand_pos, elbow_pos)
         self.body.angle = angle
 
-        self.shape = pymunk.Poly(self.body, hand_pos, elbow_pos, HAND_BODY_THICKNESS)
-        self.shape.elasticity = HAND_BODY_ELASTICITY
-        self.shape.friction = HAND_BODY_FRICTION
+        self.shape = pymunk.Poly(self.body, hand_pos, elbow_pos, ARM_THICKNESS)
+        self.shape.elasticity = ARM_ELASTICITY
+        self.shape.friction = ARM_FRICTION
         self.shape.collision_type = COLLTYPE_HAND
 
     def move(self, hand_pos, elbow_pos, dt):
@@ -116,7 +116,7 @@ class PlayerArm(pygame.sprite.Sprite):
     def create_arm_rect(hand_pos, elbow_pos):
         left = min(hand_pos[0], elbow_pos[0])
         top = max(hand_pos[1], elbow_pos[1])
-        width = HAND_BODY_THICKNESS
+        width = ARM_THICKNESS
         height = np.linalg.norm(hand_pos - elbow_pos)
 
         return pygame.Rect(left, top, width, height)
