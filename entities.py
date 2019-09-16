@@ -82,7 +82,7 @@ class PushBody(object):
 class PlayerArm(pygame.sprite.Sprite):
 
     def __init__(self, hand_pos, elbow_pos):
-        rect = PlayerArm.create_arm_box(hand_pos, elbow_pos)
+        rect = PlayerArm.create_arm_rect(hand_pos, elbow_pos)
         inertia = pymunk.moment_for_box(LOGO_MASS, rect.size)
         self.body = pymunk.Body(HAND_BODY_MASS, inertia)
         self.body.position = rect.center
@@ -96,7 +96,7 @@ class PlayerArm(pygame.sprite.Sprite):
         self.shape.collision_type = COLLTYPE_HAND
 
     def move(self, hand_pos, elbow_pos, dt):
-        rect = PlayerArm.create_arm_box(hand_pos, elbow_pos)
+        rect = PlayerArm.create_arm_rect(hand_pos, elbow_pos)
 
         old_pos = self.body.position
         new_pos = rect.center
