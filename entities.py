@@ -124,7 +124,8 @@ class PlayerArm(pygame.sprite.Sprite):
     @staticmethod
     def compute_angle(hand_pos, elbow_pos):
         arm_vec = hand_pos - elbow_pos
-        angle = -math.acos(np.dot(arm_vec, np.array([0, 1])) / np.linalg.norm(arm_vec))
+        # angle = -math.acos(np.dot(arm_vec, np.array([0, 1])) / np.linalg.norm(arm_vec))
+        angle = -arm_vec.angle
         return angle
 
 
