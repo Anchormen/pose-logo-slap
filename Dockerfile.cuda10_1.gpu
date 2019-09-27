@@ -51,4 +51,4 @@ RUN pip3 install -r requirements.txt
 
 ########### LET HER RIP ############
 ENTRYPOINT ["/opt/anchormen/run_newest.sh"]
-CMD ["--gpu", "--width 1920",  "--height 1080"]
+CMD ["--gpu", "--debug", "--width 1920",  "--height 1080"]
