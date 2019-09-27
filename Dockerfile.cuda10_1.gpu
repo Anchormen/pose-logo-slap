@@ -62,4 +62,4 @@ RUN git clone -b develop https://gitlab.anchormen.nl/MarketingDS/models/pose-log
 RUN pip3 install -r requirements.txt
 
 ########### LET HER RIP ############
-#ENTRYPOINT ["python3", "/opt/anchormen/game.py --gpu"]
+ENTRYPOINT ["./run_newest.sh --gpu --width 1920 --height 1080"]
