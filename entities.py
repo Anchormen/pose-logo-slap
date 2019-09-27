@@ -75,8 +75,9 @@ class PushBody(object):
         old_pos = self.body.position
         new_v = (new_pos - old_pos) / dt
         interpolated_v = (new_v + self.body.velocity) / 2
-        self.body.position = new_pos
-        self.body.velocity = interpolated_v
+        capped_v = max(interpolated_v, PUSH_BODY_MAX_V)
+        # self.body.position = new_pos
+        self.body.velocity = capped_v
 
 
 class Player(object):
