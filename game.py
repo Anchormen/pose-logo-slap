@@ -291,6 +291,9 @@ if __name__ == '__main__':
     parser.add_argument("--debug", action="store_true")
     args = parser.parse_args()
 
+    logger = logging.getLogger(__name__)
+    logger.info(args)
+
     screen_dims = (args.width, args.height)
     pose_estimator = PoseEstimator(args.model_path, args.net_resolution)
     grabber = camera.FrameGrabber(screen_dims[0], screen_dims[1], args.cam_id, args.fps)
