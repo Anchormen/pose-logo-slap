@@ -62,6 +62,7 @@ class PushBody(object):
 
         self.body = pymunk.Body(PUSH_BODY_MASS, inertia, pymunk.Body.KINEMATIC)
         self.body.position = pos
+        self.body.velocity_func = PushBody.limit_velocity
 
         self.shape = pymunk.Circle(self.body, PUSH_BODY_RADIUS, (0, 0))
         self.shape.collision_type = COLLTYPE_MOUSE
@@ -75,9 +76,16 @@ class PushBody(object):
         old_pos = self.body.position
         new_v = (new_pos - old_pos) / dt
         interpolated_v = (new_v + self.body.velocity) / 2
-        capped_v = max(interpolated_v, PUSH_BODY_MAX_V)
         # self.body.position = new_pos
-        self.body.velocity = capped_v
+        self.body.velocity = interpolated_v
+
+    @staticmethod
+    def limit_velocity(body, gravity, damping, dt):
+        pymunk.Body.update_velocity(body, gravity, damping, dt)
+        length = body.velocity.length
+        if length > PUSH_BODY_MAX_V:
+            scale = PUSH_BODY_MAX_V / length
+            body.velocity = body.velocity * scale
 
 
 class Player(object):
