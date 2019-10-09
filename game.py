@@ -45,8 +45,6 @@ class PoseLogoSlapGame(object):
         self.space = pymunk.Space()
         # self.space.gravity = (0.0, 600.0)
         self.space.damping = DAMPING
-        self.dt = DT
-        self.physics_steps_per_frame = 1
         self.space.add_collision_handler(COLLTYPE_LOGO, COLLTYPE_GOAL).separate = GoalPost.goal_scored_handler
 
         # PyGame
@@ -54,16 +52,26 @@ class PoseLogoSlapGame(object):
         self.screen_dims = screen_dims
         self.screen = pygame.display.set_mode(self.screen_dims)
         self.clock = pygame.time.Clock()
-
         self.draw_options = pymunk.pygame_util.DrawOptions(self.screen)
 
-        # Setup logo
         self.image_path = image_path
         self.logo = None
-        self.init_logo()
 
-        pygame.display.set_icon(self.logo.image)
+        self.test_push_body = None
+        self.players = set()
 
+        # Setup pose estimator
+        self.pose_estimator = pose_estimator
+        self.frame_grabber = frame_grabber
+        self.output_frame = None
+        self.pose_input_frame = None
+
+        self.gpu_mode = gpu_mode
+        self.debug_mode = debug_mode
+        self.running = True
+        self.fullscreen = False
+
+    def init_game(self):
         self.setup_screen_bounds(screen_dims)
 
         # the right counter, is updated when the left goal gets a goal and vice versa
@@ -79,20 +87,8 @@ class PoseLogoSlapGame(object):
                                    GOAL_MARGIN, left_counter)
         self.space.add([self.left_goal, self.right_goal])
 
-        # dynamic objects
-        self.test_push_body = None
-        self.players = set()
-
-        # Setup pose estimator
-        self.pose_estimator = pose_estimator
-        self.frame_grabber = frame_grabber
-        self.output_frame = None
-        self.pose_input_frame = None
-
-        self.gpu_mode = gpu_mode
-        self.debug_mode = debug_mode
-        self.running = True
-        self.fullscreen = False
+        self.init_logo()
+        pygame.display.set_icon(self.logo.image)
 
     def init_logo(self):
         mid_point = (self.screen_dims[0] / 2, self.screen_dims[1] / 2)
@@ -123,8 +119,8 @@ class PoseLogoSlapGame(object):
         self.logger.info("Starting game loop")
         while self.running:
             # Progress time forward
-            for x in range(self.physics_steps_per_frame):
-                self.space.step(self.dt)
+            for _ in range(PHYSICS_STEPS_PER_FRAME):
+                self.space.step(DT)
 
             self.process_events()
             self.load_new_frame()
@@ -291,12 +287,16 @@ if __name__ == '__main__':
     parser.add_argument("--debug", action="store_true")
     args = parser.parse_args()
 
+    logger = logging.getLogger(__name__)
+    logger.info(args)
+
     screen_dims = (args.width, args.height)
     pose_estimator = PoseEstimator(args.model_path, args.net_resolution)
     grabber = camera.FrameGrabber(screen_dims[0], screen_dims[1], args.cam_id, args.fps)
     grabber.start()
 
     game = PoseLogoSlapGame(screen_dims, args.image_path, pose_estimator, grabber, args.gpu, args.debug)
+    game.init_game()
     game.run()
 
     grabber.stop()

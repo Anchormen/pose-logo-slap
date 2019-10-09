@@ -8,11 +8,11 @@ A game for slapping a logo through the screen
 
 The following command will build an image with the tag poselogoslap:latest. There are 2 flavors, CPU or GPU (Cuda10):
 
-`docker build -t poselogoslap:latest https://gitlab.anchormen.nl/MarketingDS/models/pose-logo-slap/raw/master/Dockerfile.cpu`
+`docker build -t poselogoslap:latest https://raw.githubusercontent.com/Anchormen/pose-logo-slap/{BRANCH}/Dockerfile.cpu`
 
 or for GPU:
 
-`docker build -t poselogoslap:latest https://gitlab.anchormen.nl/MarketingDS/models/pose-logo-slap/raw/master/Dockerfile.gpu`
+`docker build -t poselogoslap:latest https://raw.githubusercontent.com/Anchormen/pose-logo-slap/{BRANCH}/Dockerfile.cuda10_1.gpu`
 
 # How to run
 
